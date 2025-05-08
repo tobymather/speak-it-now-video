@@ -1,7 +1,6 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 interface ProgressScreenProps {
@@ -10,80 +9,90 @@ interface ProgressScreenProps {
 }
 
 const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => {
-  const [progressAnimation, setProgressAnimation] = useState(0);
-  
-  useEffect(() => {
-    // Animate progress bar smoothly
-    const timer = setTimeout(() => {
-      setProgressAnimation(progress);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [progress]);
-  
-  const getStatusDescription = () => {
+  const getStatusText = () => {
     switch (status) {
       case 'uploading':
-        return "Uploading your photo and audio...";
+        return 'Uploading your photo and voice...';
       case 'training':
-        return "Training your avatar with AI...";
+        return 'Training your avatar...';
       case 'voicing':
-        return "Processing your voice sample...";
+        return 'Creating your AI voice...';
       case 'rendering':
-        return "Rendering your final video...";
+        return 'Generating your video...';
       default:
-        return "Processing...";
+        return 'Processing...';
     }
   };
-  
-  const steps = [
-    { id: 'uploading', label: 'Uploading' },
-    { id: 'training', label: 'Training' },
-    { id: 'voicing', label: 'Voicing' },
-    { id: 'rendering', label: 'Rendering' },
-  ];
   
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="max-w-lg mx-auto px-4 py-12 flex flex-col items-center"
+      className="max-w-3xl mx-auto px-4 py-16 text-center"
     >
-      <h1 className="text-2xl font-bold mb-8 text-center">Creating Your Video</h1>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        {getStatusText()}
+      </h2>
+      <p className="text-gray-600 mb-8">
+        This may take a few minutes. Please don't close this window.
+      </p>
       
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="mb-6">
-            <Progress value={progressAnimation} className="h-2" />
-          </div>
-          
-          <div className="grid grid-cols-4 gap-1 mb-6">
-            {steps.map((step) => (
-              <div 
-                key={step.id} 
-                className={`flex flex-col items-center ${status === step.id ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}
-              >
-                <div 
-                  className={`h-3 w-3 rounded-full mb-2 ${
-                    steps.findIndex(s => s.id === status) >= steps.findIndex(s => s.id === step.id)
-                      ? 'bg-indigo-600'
-                      : 'bg-gray-200'
-                  }`}
-                />
-                <span className="text-xs">{step.label}</span>
-              </div>
-            ))}
-          </div>
-          
-          <p className="text-center text-gray-700">{getStatusDescription()}</p>
-        </CardContent>
-      </Card>
+      <div className="mb-2">
+        <Progress value={progress} className="h-2" />
+      </div>
+      <p className="text-sm text-gray-500">{progress}% complete</p>
       
-      <div className="mt-8 text-center text-gray-500 text-sm">
-        <p>This may take a few minutes. Please don't close this window.</p>
+      <div className="mt-12 flex justify-center space-x-16">
+        <StatusStep
+          label="Upload"
+          isActive={status === 'uploading'}
+          isComplete={['training', 'voicing', 'rendering'].includes(status)}
+        />
+        <StatusStep
+          label="Train"
+          isActive={status === 'training'}
+          isComplete={['voicing', 'rendering'].includes(status)}
+        />
+        <StatusStep
+          label="Voice"
+          isActive={status === 'voicing'}
+          isComplete={['rendering'].includes(status)}
+        />
+        <StatusStep
+          label="Render"
+          isActive={status === 'rendering'}
+          isComplete={false}
+        />
       </div>
     </motion.div>
+  );
+};
+
+interface StatusStepProps {
+  label: string;
+  isActive: boolean;
+  isComplete: boolean;
+}
+
+const StatusStep: React.FC<StatusStepProps> = ({ label, isActive, isComplete }) => {
+  let bgColor = "bg-gray-200";
+  
+  if (isActive) {
+    bgColor = "bg-indigo-600";
+  } else if (isComplete) {
+    bgColor = "bg-green-500";
+  }
+  
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`w-8 h-8 rounded-full ${bgColor} flex items-center justify-center text-white font-medium mb-2`}>
+        {isComplete ? "✓" : ""}
+      </div>
+      <span className={`text-sm ${isActive ? "text-indigo-600 font-medium" : "text-gray-500"}`}>
+        {label}
+      </span>
+    </div>
   );
 };
 
