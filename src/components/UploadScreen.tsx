@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
 
 interface UploadScreenProps {
   onSubmit: (photo: File, audio: Blob, script: string) => void;
@@ -27,8 +26,6 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
       const file = e.target.files[0];
       if (file.type === "image/jpeg" || file.type === "image/png") {
         setPhoto(file);
-        // Disabled posthog for now
-        // posthog.capture("Photo Uploaded", { fileType: file.type });
       } else {
         toast.error("Please upload a JPG or PNG image");
       }
@@ -50,8 +47,6 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setAudioBlob(audioBlob);
         setIsRecording(false);
-        // Disabled posthog for now
-        // posthog.capture("Voice Recorded", { duration: recordingTime });
       };
       
       mediaRecorderRef.current.start();
@@ -84,8 +79,6 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
     e.preventDefault();
     if (photo && audioBlob && script.trim()) {
       onSubmit(photo, audioBlob, script);
-      // Disabled posthog for now
-      // posthog.capture("Generation Started", { scriptLength: script.length });
     } else {
       toast.error("Please upload a photo, record your voice, and provide a script");
     }
