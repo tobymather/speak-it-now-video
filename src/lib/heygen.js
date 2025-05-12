@@ -10,22 +10,38 @@
  * @returns {Promise<object>} - The response from the API
  */
 export async function uploadAsset(file, mime) {
+  console.log(`Uploading asset with type ${mime}, file size: ${file.size} bytes`);
+  console.log(`Using API key: ${import.meta.env.VITE_HEYGEN_API_KEY}`);
+  console.log(`API Base URL: ${import.meta.env.VITE_HEYGEN_BASE}`);
+  
   const formData = new FormData();
   formData.append('file', file);
   
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v1/asset`, {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-    },
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to upload asset: ${response.status} ${response.statusText}`);
+  try {
+    console.log(`Sending request to ${import.meta.env.VITE_HEYGEN_BASE}/v1/asset`);
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v1/asset`, {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+      },
+      body: formData,
+    });
+    
+    console.log(`Upload response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Upload asset failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to upload asset: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Upload asset successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in uploadAsset:', error);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -34,23 +50,36 @@ export async function uploadAsset(file, mime) {
  * @returns {Promise<object>} - The response from the API
  */
 export async function createAvatarGroup(imageKey) {
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/avatar_group/create`, {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      image_key: imageKey,
-      name: `Avatar Group ${Date.now()}`,
-    }),
-  });
+  console.log(`Creating avatar group with image key: ${imageKey}`);
   
-  if (!response.ok) {
-    throw new Error(`Failed to create avatar group: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/avatar_group/create`, {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image_key: imageKey,
+        name: `Avatar Group ${Date.now()}`,
+      }),
+    });
+    
+    console.log(`Create avatar group response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Create avatar group failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to create avatar group: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Create avatar group successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in createAvatarGroup:', error);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -59,22 +88,35 @@ export async function createAvatarGroup(imageKey) {
  * @returns {Promise<object>} - The response from the API
  */
 export async function trainAvatarGroup(groupId) {
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/train`, {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      group_id: groupId,
-    }),
-  });
+  console.log(`Training avatar group with ID: ${groupId}`);
   
-  if (!response.ok) {
-    throw new Error(`Failed to start training: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/train`, {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        group_id: groupId,
+      }),
+    });
+    
+    console.log(`Train avatar group response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Train avatar group failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to start training: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Train avatar group successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in trainAvatarGroup:', error);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -83,18 +125,31 @@ export async function trainAvatarGroup(groupId) {
  * @returns {Promise<object>} - The response from the API
  */
 export async function pollTraining(groupId) {
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/train/status/${groupId}`, {
-    method: 'GET',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-    },
-  });
+  console.log(`Polling training status for group ID: ${groupId}`);
   
-  if (!response.ok) {
-    throw new Error(`Failed to poll training status: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/photo_avatar/train/status/${groupId}`, {
+      method: 'GET',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+      },
+    });
+    
+    console.log(`Poll training status response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Poll training status failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to poll training status: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Poll training status successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in pollTraining:', error);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -103,6 +158,8 @@ export async function pollTraining(groupId) {
  * @returns {Promise<object>} - The response from the API
  */
 export async function createBrandVoice(audioAssetId) {
+  console.log(`Creating brand voice with audio asset ID: ${audioAssetId}`);
+  
   try {
     const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v1/brand_voice/create`, {
       method: 'POST',
@@ -116,12 +173,23 @@ export async function createBrandVoice(audioAssetId) {
       }),
     });
     
+    console.log(`Create brand voice response status: ${response.status} ${response.statusText}`);
+    
     if (!response.ok) {
-      throw new Error(`Failed to create brand voice: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Create brand voice failed: ${response.status} ${response.statusText}`, errorText);
+      if (response.status === 403) {
+        console.warn('Falling back to using audio directly due to 403 error');
+        return { voice_id: null, audio_asset_id: audioAssetId }; // Return audio_asset_id for fallback
+      }
+      throw new Error(`Failed to create brand voice: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Create brand voice successful:', data);
+    return data;
   } catch (error) {
+    console.error('Error in createBrandVoice:', error);
     console.warn('Falling back to using audio directly:', error);
     return { voice_id: null, audio_asset_id: audioAssetId }; // Return audio_asset_id for fallback
   }
@@ -136,6 +204,11 @@ export async function createBrandVoice(audioAssetId) {
  * @returns {Promise<object>} - The response from the API
  */
 export async function generateVideo(talkingPhotoId, voiceId, audioAssetId, script) {
+  console.log(`Generating video with talking photo ID: ${talkingPhotoId}`);
+  console.log(`Voice ID: ${voiceId || 'Not available, falling back to audio asset'}`);
+  console.log(`Audio Asset ID (fallback): ${audioAssetId}`);
+  console.log(`Script: ${script}`);
+  
   // Prepare voice configuration based on what we have
   let voiceConfig;
   if (voiceId) {
@@ -144,11 +217,13 @@ export async function generateVideo(talkingPhotoId, voiceId, audioAssetId, scrip
       voice_id: voiceId,
       input_text: script
     };
+    console.log('Using text-to-speech voice configuration');
   } else {
     voiceConfig = {
       type: "audio",
       audio_asset_id: audioAssetId
     };
+    console.log('Using direct audio asset configuration');
   }
   
   const payload = {
@@ -163,20 +238,33 @@ export async function generateVideo(talkingPhotoId, voiceId, audioAssetId, scrip
     ],
   };
   
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/video/generate`, {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  console.log('Video generation payload:', JSON.stringify(payload, null, 2));
   
-  if (!response.ok) {
-    throw new Error(`Failed to generate video: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v2/video/generate`, {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    
+    console.log(`Generate video response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Generate video failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to generate video: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Generate video successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in generateVideo:', error);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -185,16 +273,29 @@ export async function generateVideo(talkingPhotoId, voiceId, audioAssetId, scrip
  * @returns {Promise<object>} - The response from the API
  */
 export async function pollVideo(videoId) {
-  const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v1/video_status.get?id=${videoId}`, {
-    method: 'GET',
-    headers: {
-      'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
-    },
-  });
+  console.log(`Polling video status for video ID: ${videoId}`);
   
-  if (!response.ok) {
-    throw new Error(`Failed to poll video status: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${import.meta.env.VITE_HEYGEN_BASE}/v1/video_status.get?id=${videoId}`, {
+      method: 'GET',
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_HEYGEN_API_KEY,
+      },
+    });
+    
+    console.log(`Poll video status response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Poll video status failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to poll video status: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Poll video status successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in pollVideo:', error);
+    throw error;
   }
-  
-  return await response.json();
 }

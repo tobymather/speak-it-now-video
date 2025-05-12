@@ -46,6 +46,11 @@ const Index = () => {
   
   const handleSubmit = async (photo: File, audio: Blob, script: string) => {
     try {
+      console.log("Starting video creation process");
+      console.log("Photo type:", photo.type, "size:", photo.size);
+      console.log("Audio type:", audio.type, "size:", audio.size);
+      console.log("Script length:", script.length);
+      
       // Start the process
       setState('uploading');
       setProgress(0);
@@ -54,24 +59,31 @@ const Index = () => {
       const uploadProgressStep = 25;
       setProgress(5);
       
+      console.log("Step 1: Uploading photo");
       const photoResponse = await uploadAsset(photo, photo.type);
       setProgress(15);
       console.log("Photo uploaded:", photoResponse);
       const imageKey = photoResponse.image_key;
+      console.log("Image key:", imageKey);
       
+      console.log("Step 1b: Uploading audio");
       const audioResponse = await uploadAsset(audio, audio.type);
       setProgress(25);
       console.log("Audio uploaded:", audioResponse);
       const audioAssetId = audioResponse.audio_asset_id;
+      console.log("Audio asset ID:", audioAssetId);
       
       // 2. Create and train avatar (25-50%)
+      console.log("Step 2: Creating avatar group");
       setState('training');
       
       const avatarGroupResponse = await createAvatarGroup(imageKey);
       setProgress(30);
       console.log("Avatar group created:", avatarGroupResponse);
       const groupId = avatarGroupResponse.group_id;
+      console.log("Group ID:", groupId);
       
+      console.log("Step 2b: Training avatar");
       await trainAvatarGroup(groupId);
       setProgress(35);
       console.log("Training started");
@@ -87,8 +99,10 @@ const Index = () => {
         if (trainingStatus.status === 'completed') {
           trainingComplete = true;
           talkingPhotoId = trainingStatus.talking_photo_id;
+          console.log("Training completed. Talking photo ID:", talkingPhotoId);
           setProgress(50);
         } else {
+          console.log("Training in progress, status:", trainingStatus.status);
           // Update progress based on estimated completion
           setProgress(35 + Math.floor(Math.random() * 15)); // Random between 35-49
           await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
@@ -96,6 +110,7 @@ const Index = () => {
       }
       
       // 3. Create voice (50-75%)
+      console.log("Step 3: Creating voice");
       setState('voicing');
       setProgress(55);
       
@@ -104,6 +119,7 @@ const Index = () => {
         const voiceResponse = await createBrandVoice(audioAssetId);
         console.log("Voice created:", voiceResponse);
         voiceId = voiceResponse.voice_id;
+        console.log("Voice ID:", voiceId);
         setProgress(75);
       } catch (error) {
         console.error("Error creating voice, will fall back to direct audio:", error);
@@ -111,12 +127,14 @@ const Index = () => {
       }
       
       // 4. Generate video (75-99%)
+      console.log("Step 4: Generating video");
       setState('rendering');
       setProgress(80);
       
       const videoResponse = await generateVideo(talkingPhotoId, voiceId, audioAssetId, script);
       console.log("Video generation started:", videoResponse);
       const videoId = videoResponse.video_id;
+      console.log("Video ID:", videoId);
       
       // Poll video status until completed
       let videoComplete = false;
@@ -127,10 +145,12 @@ const Index = () => {
         
         if (videoStatus.status === 'completed') {
           videoComplete = true;
+          console.log("Video completed. URL:", videoStatus.video_url);
           setVideoUrl(videoStatus.video_url);
           setProgress(100);
           setState('done');
         } else {
+          console.log("Video rendering in progress, status:", videoStatus.status);
           // Update progress based on estimated completion
           setProgress(80 + Math.floor(Math.random() * 19)); // Random between 80-98
           await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds

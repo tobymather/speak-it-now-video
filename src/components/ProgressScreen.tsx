@@ -24,6 +24,21 @@ const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => 
     }
   };
   
+  const getDebugInfo = () => {
+    switch (status) {
+      case 'uploading':
+        return 'Sending files to HeyGen API...';
+      case 'training':
+        return 'Avatar is being processed by HeyGen AI...';
+      case 'voicing':
+        return 'Voice model is being created...';
+      case 'rendering':
+        return 'Final video is being rendered...';
+      default:
+        return '';
+    }
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -42,6 +57,10 @@ const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => 
         <Progress value={progress} className="h-2" />
       </div>
       <p className="text-sm text-gray-500">{progress}% complete</p>
+      
+      <div className="mt-2 text-xs text-gray-400">
+        {getDebugInfo()}
+      </div>
       
       <div className="mt-12 flex justify-center space-x-16">
         <StatusStep
