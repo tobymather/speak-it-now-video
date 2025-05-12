@@ -8,15 +8,7 @@ import { toast } from "sonner";
 import posthog from "posthog-js";
 import { AnimatePresence } from "framer-motion";
 
-import {
-  uploadAsset,
-  createAvatarGroup,
-  trainAvatarGroup,
-  pollTraining,
-  createBrandVoice,
-  generateVideo,
-  pollVideo,
-} from "@/lib/heygen";
+import { proxyUploadAsset, proxyHeyGenAPI } from "@/lib/heygenProxy";
 
 // Initialize PostHog but only if key exists and is not the placeholder
 if (typeof window !== 'undefined' && 
@@ -66,109 +58,139 @@ const Index = () => {
       
       console.log("Step 1: Uploading photo");
       
-      // Check if direct API is working or if we need to use a proxy
+      // Use proxy functions instead of direct API calls
+      const photoResponse = await proxyUploadAsset(photo, photo.type);
+      setProgress(15);
+      console.log("Photo uploaded:", photoResponse);
+      const imageKey = photoResponse.image_key;
+      console.log("Image key:", imageKey);
+      
+      console.log("Step 1b: Uploading audio");
+      const audioResponse = await proxyUploadAsset(audio, audio.type);
+      setProgress(25);
+      console.log("Audio uploaded:", audioResponse);
+      const audioAssetId = audioResponse.audio_asset_id;
+      console.log("Audio asset ID:", audioAssetId);
+      
+      // 2. Create and train avatar (25-50%)
+      console.log("Step 2: Creating avatar group");
+      setState('training');
+      
+      const avatarGroupResponse = await proxyHeyGenAPI('/v2/photo_avatar/avatar_group/create', 'POST', {
+        image_key: imageKey,
+        name: `Avatar Group ${Date.now()}`,
+      });
+      setProgress(30);
+      console.log("Avatar group created:", avatarGroupResponse);
+      const groupId = avatarGroupResponse.group_id;
+      console.log("Group ID:", groupId);
+      
+      console.log("Step 2b: Training avatar");
+      await proxyHeyGenAPI('/v2/photo_avatar/train', 'POST', {
+        group_id: groupId,
+      });
+      setProgress(35);
+      console.log("Training started");
+      
+      // Poll training status until completed
+      let trainingComplete = false;
+      let talkingPhotoId = '';
+      
+      while (!trainingComplete) {
+        const trainingStatus = await proxyHeyGenAPI(`/v2/photo_avatar/train/status/${groupId}`, 'GET', null);
+        console.log("Training status:", trainingStatus);
+        
+        if (trainingStatus.status === 'completed') {
+          trainingComplete = true;
+          talkingPhotoId = trainingStatus.talking_photo_id;
+          console.log("Training completed. Talking photo ID:", talkingPhotoId);
+          setProgress(50);
+        } else {
+          console.log("Training in progress, status:", trainingStatus.status);
+          // Update progress based on estimated completion
+          setProgress(35 + Math.floor(Math.random() * 15)); // Random between 35-49
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
+        }
+      }
+      
+      // 3. Create voice (50-75%)
+      console.log("Step 3: Creating voice");
+      setState('voicing');
+      setProgress(55);
+      
+      let voiceId = null;
       try {
-        const photoResponse = await uploadAsset(photo, photo.type);
-        setProgress(15);
-        console.log("Photo uploaded:", photoResponse);
-        const imageKey = photoResponse.image_key;
-        console.log("Image key:", imageKey);
+        const voiceResponse = await proxyHeyGenAPI('/v1/brand_voice/create', 'POST', {
+          audio_asset_id: audioAssetId,
+          name: `Voice ${Date.now()}`,
+        });
+        console.log("Voice created:", voiceResponse);
+        voiceId = voiceResponse.voice_id;
+        console.log("Voice ID:", voiceId);
+        setProgress(75);
+      } catch (error) {
+        console.error("Error creating voice, will fall back to direct audio:", error);
+        // We'll fall back to using audio_asset_id directly if voice creation fails
+      }
+      
+      // 4. Generate video (75-99%)
+      console.log("Step 4: Generating video");
+      setState('rendering');
+      setProgress(80);
+      
+      // Prepare voice configuration based on what we have
+      let voiceConfig;
+      if (voiceId) {
+        voiceConfig = {
+          type: "text",
+          voice_id: voiceId,
+          input_text: script
+        };
+        console.log('Using text-to-speech voice configuration');
+      } else {
+        voiceConfig = {
+          type: "audio",
+          audio_asset_id: audioAssetId
+        };
+        console.log('Using direct audio asset configuration');
+      }
+      
+      const payload = {
+        video_inputs: [
+          {
+            character: {
+              type: "talking_photo",
+              talking_photo_id: talkingPhotoId
+            },
+            voice: voiceConfig,
+          },
+        ],
+      };
+      
+      const videoResponse = await proxyHeyGenAPI('/v2/video/generate', 'POST', payload);
+      console.log("Video generation started:", videoResponse);
+      const videoId = videoResponse.video_id;
+      console.log("Video ID:", videoId);
+      
+      // Poll video status until completed
+      let videoComplete = false;
+      
+      while (!videoComplete) {
+        const videoStatus = await proxyHeyGenAPI(`/v1/video_status.get?id=${videoId}`, 'GET', null);
+        console.log("Video status:", videoStatus);
         
-        console.log("Step 1b: Uploading audio");
-        const audioResponse = await uploadAsset(audio, audio.type);
-        setProgress(25);
-        console.log("Audio uploaded:", audioResponse);
-        const audioAssetId = audioResponse.audio_asset_id;
-        console.log("Audio asset ID:", audioAssetId);
-        
-        // 2. Create and train avatar (25-50%)
-        console.log("Step 2: Creating avatar group");
-        setState('training');
-        
-        const avatarGroupResponse = await createAvatarGroup(imageKey);
-        setProgress(30);
-        console.log("Avatar group created:", avatarGroupResponse);
-        const groupId = avatarGroupResponse.group_id;
-        console.log("Group ID:", groupId);
-        
-        console.log("Step 2b: Training avatar");
-        await trainAvatarGroup(groupId);
-        setProgress(35);
-        console.log("Training started");
-        
-        // Poll training status until completed
-        let trainingComplete = false;
-        let talkingPhotoId = '';
-        
-        while (!trainingComplete) {
-          const trainingStatus = await pollTraining(groupId);
-          console.log("Training status:", trainingStatus);
-          
-          if (trainingStatus.status === 'completed') {
-            trainingComplete = true;
-            talkingPhotoId = trainingStatus.talking_photo_id;
-            console.log("Training completed. Talking photo ID:", talkingPhotoId);
-            setProgress(50);
-          } else {
-            console.log("Training in progress, status:", trainingStatus.status);
-            // Update progress based on estimated completion
-            setProgress(35 + Math.floor(Math.random() * 15)); // Random between 35-49
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
-          }
+        if (videoStatus.status === 'completed') {
+          videoComplete = true;
+          console.log("Video completed. URL:", videoStatus.video_url);
+          setVideoUrl(videoStatus.video_url);
+          setProgress(100);
+          setState('done');
+        } else {
+          console.log("Video rendering in progress, status:", videoStatus.status);
+          // Update progress based on estimated completion
+          setProgress(80 + Math.floor(Math.random() * 19)); // Random between 80-98
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
         }
-        
-        // 3. Create voice (50-75%)
-        console.log("Step 3: Creating voice");
-        setState('voicing');
-        setProgress(55);
-        
-        let voiceId = null;
-        try {
-          const voiceResponse = await createBrandVoice(audioAssetId);
-          console.log("Voice created:", voiceResponse);
-          voiceId = voiceResponse.voice_id;
-          console.log("Voice ID:", voiceId);
-          setProgress(75);
-        } catch (error) {
-          console.error("Error creating voice, will fall back to direct audio:", error);
-          // We'll fall back to using audio_asset_id directly if voice creation fails
-        }
-        
-        // 4. Generate video (75-99%)
-        console.log("Step 4: Generating video");
-        setState('rendering');
-        setProgress(80);
-        
-        const videoResponse = await generateVideo(talkingPhotoId, voiceId, audioAssetId, script);
-        console.log("Video generation started:", videoResponse);
-        const videoId = videoResponse.video_id;
-        console.log("Video ID:", videoId);
-        
-        // Poll video status until completed
-        let videoComplete = false;
-        
-        while (!videoComplete) {
-          const videoStatus = await pollVideo(videoId);
-          console.log("Video status:", videoStatus);
-          
-          if (videoStatus.status === 'completed') {
-            videoComplete = true;
-            console.log("Video completed. URL:", videoStatus.video_url);
-            setVideoUrl(videoStatus.video_url);
-            setProgress(100);
-            setState('done');
-          } else {
-            console.log("Video rendering in progress, status:", videoStatus.status);
-            // Update progress based on estimated completion
-            setProgress(80 + Math.floor(Math.random() * 19)); // Random between 80-98
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
-          }
-        }
-      } catch (apiError) {
-        console.error("Direct API request failed:", apiError);
-        setError("CORS error or API connection issue. Please try again later or use our mobile app.");
-        toast.error("API connection issue. Please try again later.");
-        setState('idle');
       }
       
     } catch (error) {
