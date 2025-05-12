@@ -1,0 +1,16 @@
+name = "heygen-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "726158b3f2032e7180f4ad96922fb820"
+
+[vars]
+# You can set environment variables here
+# HEYGEN_API_KEY = "your-api-key" # Optional: Set this if you want to use a default API key
+
+# The worker will be available at heygen-proxy.tobymather.workers.dev
+workers_dev = true
+
+# Configure your routes
+routes = [
+  { pattern = "your-worker-subdomain.workers.dev/*", zone_name = "workers.dev" }
+] 
