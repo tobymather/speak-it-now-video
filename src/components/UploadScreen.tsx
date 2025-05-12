@@ -179,7 +179,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
                       >
                         {isRecording ? "Stop Recording" : "Start Recording"}
                       </Button>
-                      {isRecording && recordingTime < 30 && (
+                      {isRecording && recordingTime < 15 && (
                         <p className="mt-2 text-sm text-amber-500">
                           Please record for at least 30 seconds ({30 - recordingTime}s remaining)
                         </p>
