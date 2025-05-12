@@ -89,7 +89,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
   };
   
   // Check if all required fields are filled
-  const isFormValid = !!photo && !!audioBlob && !!script.trim() && recordingTime >= 30;
+  const isFormValid = !!photo && !!audioBlob && !!script.trim() && recordingTime >= 15;
   
   return (
     <motion.div
@@ -151,7 +151,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
             
             {/* Voice Recording */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Record Your Voice (at least 30 seconds)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Record Your Voice (at least 15 seconds)</label>
               <div className="border border-gray-300 rounded-lg p-6">
                 <div className="flex flex-col items-center justify-center">
                   {audioBlob ? (
@@ -181,7 +181,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
                       </Button>
                       {isRecording && recordingTime < 15 && (
                         <p className="mt-2 text-sm text-amber-500">
-                          Please record for at least 30 seconds ({30 - recordingTime}s remaining)
+                          Please record for at least 15 seconds ({15 - recordingTime}s remaining)
                         </p>
                       )}
                     </div>

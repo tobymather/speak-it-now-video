@@ -1,6 +1,12 @@
 
 /**
  * HeyGen API Integration Helper Functions
+ * 
+ * NOTE: Due to CORS restrictions, these direct API calls might not work from the browser.
+ * For production use, consider:
+ * 1. Using a backend proxy (like a Node.js server or Cloud Function)
+ * 2. Using the proxy implementation in heygenProxy.js
+ * 3. Using the HeyGen SDK or REST API from your backend
  */
 
 /**
@@ -40,6 +46,13 @@ export async function uploadAsset(file, mime) {
     return data;
   } catch (error) {
     console.error('Error in uploadAsset:', error);
+    
+    // Check if this is a CORS error
+    if (error.message && (error.message.includes('CORS') || error.message.includes('Failed to fetch'))) {
+      console.error('CORS error detected. This may be due to browser restrictions on direct API calls.');
+      console.error('Consider using a backend proxy or server-side implementation.');
+    }
+    
     throw error;
   }
 }
