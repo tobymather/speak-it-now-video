@@ -1,10 +1,10 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import posthog from "posthog-js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UploadScreenProps {
   onSubmit: (photo: File, audio: Blob, script: string) => void;
@@ -16,6 +16,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
   const [recordingTime, setRecordingTime] = useState<number>(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [script, setScript] = useState<string>("");
+  const [audioSource, setAudioSource] = useState<"record" | "upload">("record");
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
@@ -31,6 +32,25 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
         // posthog.capture("Photo Uploaded", { fileType: file.type });
       } else {
         toast.error("Please upload a JPG or PNG image");
+      }
+    }
+  };
+  
+  // Handle audio file upload
+  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Check if it's an audio file
+      if (file.type.startsWith("audio/")) {
+        // Convert File to Blob
+        file.arrayBuffer().then(buffer => {
+          const blob = new Blob([buffer], { type: file.type });
+          setAudioBlob(blob);
+          // Disabled posthog for now
+          // posthog.capture("Audio Uploaded", { fileType: file.type });
+        });
+      } else {
+        toast.error("Please upload an audio file (MP3, WAV, etc.)");
       }
     }
   };
@@ -87,12 +107,13 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
       // Disabled posthog for now
       // posthog.capture("Generation Started", { scriptLength: script.length });
     } else {
-      toast.error("Please upload a photo, record your voice, and provide a script");
+      toast.error("Please upload a photo, provide audio, and enter a script");
     }
   };
   
   // Check if all required fields are filled
-  const isFormValid = !!photo && !!audioBlob && !!script.trim() && recordingTime >= 15;
+  const isFormValid = !!photo && !!audioBlob && !!script.trim() && 
+    (audioSource === "upload" || (audioSource === "record" && recordingTime >= 15));
   
   return (
     <motion.div
@@ -103,7 +124,7 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
     >
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">AI Video Creator</h1>
-        <p className="text-gray-600 mt-2">Upload a photo, record your voice, and get an AI-generated video</p>
+        <p className="text-gray-600 mt-2">Upload a photo, provide your voice, and get an AI-generated video</p>
       </div>
       
       <form onSubmit={handleSubmit}>
@@ -152,45 +173,92 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
               </div>
             </div>
             
-            {/* Voice Recording */}
+            {/* Audio Section - with tabs for Recording vs Uploading */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Record Your Voice (at least 15 seconds)</label>
-              <div className="border border-gray-300 rounded-lg p-6">
-                <div className="flex flex-col items-center justify-center">
-                  {audioBlob ? (
-                    <div className="w-full text-center">
-                      <audio src={URL.createObjectURL(audioBlob)} controls className="w-full mb-2" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setAudioBlob(null)}
-                      >
-                        Record Again
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <div className="mb-2 text-2xl font-bold">
-                        {isRecording ? `${recordingTime}s` : "Ready"}
+              <label className="block text-sm font-medium text-gray-700 mb-2">Provide Your Voice</label>
+              <Tabs value={audioSource} onValueChange={(value) => setAudioSource(value as "record" | "upload")}>
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="record">Record Voice</TabsTrigger>
+                  <TabsTrigger value="upload">Upload Audio</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="record" className="border border-gray-300 rounded-lg p-6">
+                  <div className="flex flex-col items-center justify-center">
+                    {audioBlob && audioSource === "record" ? (
+                      <div className="w-full text-center">
+                        <audio src={URL.createObjectURL(audioBlob)} controls className="w-full mb-2" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAudioBlob(null)}
+                        >
+                          Record Again
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant={isRecording ? "destructive" : "default"}
-                        onClick={isRecording ? stopRecording : startRecording}
-                        className={`${isRecording ? "bg-red-600" : "bg-indigo-600"} text-white`}
-                      >
-                        {isRecording ? "Stop Recording" : "Start Recording"}
-                      </Button>
-                      {isRecording && recordingTime < 15 && (
-                        <p className="mt-2 text-sm text-amber-500">
-                          Please record for at least 15 seconds ({15 - recordingTime}s remaining)
+                    ) : (
+                      <div className="text-center">
+                        <div className="mb-2 text-2xl font-bold">
+                          {isRecording ? `${recordingTime}s` : "Ready"}
+                        </div>
+                        <Button
+                          type="button"
+                          variant={isRecording ? "destructive" : "default"}
+                          onClick={isRecording ? stopRecording : startRecording}
+                          className={`${isRecording ? "bg-red-600" : "bg-indigo-600"} text-white`}
+                        >
+                          {isRecording ? "Stop Recording" : "Start Recording"}
+                        </Button>
+                        {isRecording && recordingTime < 15 && (
+                          <p className="mt-2 text-sm text-amber-500">
+                            Please record for at least 15 seconds ({15 - recordingTime}s remaining)
+                          </p>
+                        )}
+                        <p className="mt-2 text-xs text-gray-500">
+                          Record at least 15 seconds of your voice speaking clearly
                         </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="upload" className="border border-gray-300 rounded-lg p-6">
+                  <div className="flex flex-col items-center justify-center">
+                    {audioBlob && audioSource === "upload" ? (
+                      <div className="w-full text-center">
+                        <audio src={URL.createObjectURL(audioBlob)} controls className="w-full mb-2" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAudioBlob(null)}
+                        >
+                          Change Audio File
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <input
+                          id="audio-upload"
+                          type="file"
+                          accept="audio/*"
+                          onChange={handleAudioUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="audio-upload"
+                          className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          Select Audio File
+                        </label>
+                        <p className="mt-2 text-xs text-gray-500">
+                          Upload an audio file of your voice (MP3, WAV, etc.)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
             
             {/* Script Input */}
