@@ -3,12 +3,13 @@
 
 const HEYGEN_API_BASE = 'https://api.heygen.com';
 const HEYGEN_UPLOAD_BASE = 'https://upload.heygen.com';
+const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 
 // Configure CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // TODO: Replace with your domain in production
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, X-Api-Key, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Api-Key, Authorization, xi-api-key',
 };
 
 // Error response helper
@@ -52,12 +53,190 @@ async function handleRequest(request) {
     const url = new URL(request.url);
     const path = url.pathname;
     const apiKey = request.headers.get('X-Api-Key');
+    const elevenLabsApiKey = request.headers.get('xi-api-key');
 
     console.log(`Handling ${request.method} request to ${path}`);
 
-    if (!apiKey) {
-      console.error('No API key provided');
-      return errorResponse('API key is required', 401);
+    // ElevenLabs API endpoints
+    if (path === '/elevenlabs/voices/add') {
+      if (!elevenLabsApiKey) {
+        return errorResponse('ElevenLabs API key is required', 401);
+      }
+      
+      try {
+        console.log('Creating voice in ElevenLabs');
+        
+        // Get the content type and form data
+        const contentType = request.headers.get('Content-Type');
+        console.log('Content-Type:', contentType);
+        
+        if (!contentType || !contentType.includes('multipart/form-data')) {
+          return errorResponse('Content-Type must be multipart/form-data');
+        }
+        
+        // Parse the form data
+        const formData = await request.formData();
+        const audioFile = formData.get('files');
+        const name = formData.get('name') || `Voice ${Date.now()}`;
+        
+        if (!audioFile) {
+          return errorResponse('Audio file is required');
+        }
+        
+        // Create a new FormData for ElevenLabs
+        const elevenLabsFormData = new FormData();
+        elevenLabsFormData.append('name', name);
+        elevenLabsFormData.append('files', audioFile);
+        
+        // Make request to ElevenLabs
+        const response = await fetch(`${ELEVENLABS_API_BASE}/voices/add`, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': elevenLabsApiKey,
+          },
+          body: elevenLabsFormData,
+        });
+        
+        console.log('ElevenLabs API response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('ElevenLabs API error:', errorText);
+          return errorResponse(`ElevenLabs API error: ${response.status} - ${errorText}`, response.status);
+        }
+        
+        const data = await response.json();
+        console.log('Voice created successfully in ElevenLabs:', JSON.stringify(data));
+        
+        return successResponse(data);
+      } catch (error) {
+        console.error('ElevenLabs voice creation error:', error);
+        return errorResponse(`ElevenLabs voice creation failed: ${error.message}`);
+      }
+    }
+    
+    // Link ElevenLabs voice to HeyGen
+    if (path === '/v1/voice.add') {
+      if (!apiKey) {
+        return errorResponse('HeyGen API key is required', 401);
+      }
+      
+      if (!elevenLabsApiKey) {
+        return errorResponse('ElevenLabs API key is required', 401);
+      }
+      
+      try {
+        console.log('Linking ElevenLabs voice to HeyGen');
+        const body = await request.json();
+        console.log('Request body:', JSON.stringify(body));
+        
+        if (!body.voice_id) {
+          return errorResponse('voice_id is required');
+        }
+        
+        // Make request to HeyGen
+        const response = await fetch(`${HEYGEN_API_BASE}/v1/voice.add`, {
+          method: 'POST',
+          headers: {
+            'X-Api-Key': apiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            provider: 'elevenlabs',
+            api_key: elevenLabsApiKey,
+            voice_id: body.voice_id
+          }),
+        });
+        
+        console.log('HeyGen voice linking response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('HeyGen voice linking error:', errorText);
+          return errorResponse(`HeyGen API error: ${response.status} - ${errorText}`, response.status);
+        }
+        
+        const data = await response.json();
+        console.log('Voice linked successfully:', JSON.stringify(data));
+        
+        return successResponse(data);
+      } catch (error) {
+        console.error('Voice linking error:', error);
+        return errorResponse(`Voice linking failed: ${error.message}`);
+      }
+    }
+    
+    // Generate speech from ElevenLabs
+    if (path === '/elevenlabs/text-to-speech') {
+      if (!elevenLabsApiKey) {
+        return errorResponse('ElevenLabs API key is required', 401);
+      }
+      
+      try {
+        console.log('Generating speech from ElevenLabs');
+        const body = await request.json();
+        console.log('Request body:', JSON.stringify(body));
+        
+        if (!body.voice_id) {
+          return errorResponse('voice_id is required');
+        }
+        
+        if (!body.text) {
+          return errorResponse('text is required');
+        }
+        
+        // Make request to ElevenLabs
+        const response = await fetch(`${ELEVENLABS_API_BASE}/text-to-speech/${body.voice_id}`, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': elevenLabsApiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: body.text,
+            model_id: body.model_id || 'eleven_monolingual_v1',
+            voice_settings: body.voice_settings || {
+              stability: 0.5,
+              similarity_boost: 0.75
+            }
+          }),
+        });
+        
+        console.log('ElevenLabs TTS response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('ElevenLabs TTS error:', errorText);
+          return errorResponse(`ElevenLabs API error: ${response.status} - ${errorText}`, response.status);
+        }
+        
+        // Get the audio data as an ArrayBuffer
+        const audioData = await response.arrayBuffer();
+        
+        // Upload the audio to HeyGen
+        const uploadResponse = await fetch(`${HEYGEN_UPLOAD_BASE}/v1/asset`, {
+          method: 'POST',
+          headers: {
+            'X-Api-Key': apiKey,
+            'Content-Type': 'audio/mpeg',
+          },
+          body: audioData,
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error('HeyGen audio upload error:', errorText);
+          return errorResponse(`HeyGen API error: ${uploadResponse.status} - ${errorText}`, uploadResponse.status);
+        }
+        
+        const uploadData = await uploadResponse.json();
+        console.log('Audio uploaded to HeyGen successfully:', JSON.stringify(uploadData));
+        
+        return successResponse(uploadData);
+      } catch (error) {
+        console.error('Speech generation error:', error);
+        return errorResponse(`Speech generation failed: ${error.message}`);
+      }
     }
 
     // Special handling for file uploads

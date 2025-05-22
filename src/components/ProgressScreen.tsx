@@ -1,43 +1,91 @@
-
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { generateVideo, checkVideoStatus } from '../lib/heygen';
+import type { VideoResult } from '../lib/heygen';
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 
 interface ProgressScreenProps {
-  status: 'uploading' | 'training' | 'voicing' | 'rendering';
-  progress: number;
+  avatarId: string;
+  script: string;
+  voiceId?: string;
+  audioAssetId?: string;
+  onComplete: (videoUrl: string) => void;
+  onError: (error: string) => void;
 }
 
-const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => {
-  const getStatusText = () => {
-    switch (status) {
-      case 'uploading':
-        return 'Uploading your photo and voice...';
-      case 'training':
-        return 'Training your avatar...';
-      case 'voicing':
-        return 'Creating your AI voice...';
-      case 'rendering':
-        return 'Generating your video...';
-      default:
-        return 'Processing...';
-    }
-  };
+export const ProgressScreen: React.FC<ProgressScreenProps> = ({
+  avatarId,
+  script,
+  voiceId,
+  audioAssetId,
+  onComplete,
+  onError,
+}) => {
+  const [status, setStatus] = useState<string>('Initializing...');
+  const [progress, setProgress] = useState<number>(0);
+  const [videoId, setVideoId] = useState<string | null>(null);
   
-  const getDebugInfo = () => {
-    switch (status) {
-      case 'uploading':
-        return 'Sending files to HeyGen API...';
-      case 'training':
-        return 'Avatar is being processed by HeyGen AI...';
-      case 'voicing':
-        return 'Voice model is being created...';
-      case 'rendering':
-        return 'Final video is being rendered...';
-      default:
-        return '';
-    }
-  };
+  useEffect(() => {
+    let isMounted = true;
+    let pollInterval: NodeJS.Timeout;
+    
+    const startVideoGeneration = async () => {
+      try {
+        setStatus('Generating video...');
+        setProgress(10);
+        
+        // Generate video
+        const result = await generateVideo(avatarId, script, voiceId, audioAssetId);
+        if (!isMounted) return;
+        
+        if (result.data.status === 'failed') {
+          throw new Error(result.data.error_msg || 'Video generation failed');
+        }
+        
+        setVideoId(result.data.video_id);
+        setStatus('Processing video...');
+        setProgress(30);
+        
+        // Start polling for video status
+        pollInterval = setInterval(async () => {
+          try {
+            const statusResult = await checkVideoStatus(result.data.video_id);
+            if (!isMounted) return;
+            
+            if (statusResult.data.status === 'completed' && statusResult.data.video_url) {
+              clearInterval(pollInterval);
+              setProgress(100);
+              setStatus('Video ready!');
+              onComplete(statusResult.data.video_url);
+            } else if (statusResult.data.status === 'failed') {
+              throw new Error(statusResult.data.error_msg || 'Video processing failed');
+            } else {
+              // Update progress based on status
+              setProgress(prev => Math.min(prev + 5, 90));
+            }
+          } catch (err) {
+            if (isMounted) {
+              clearInterval(pollInterval);
+              onError(err instanceof Error ? err.message : 'Failed to check video status');
+            }
+          }
+        }, 5000); // Poll every 5 seconds
+      } catch (err) {
+        if (isMounted) {
+          onError(err instanceof Error ? err.message : 'Failed to generate video');
+        }
+      }
+    };
+    
+    startVideoGeneration();
+    
+    return () => {
+      isMounted = false;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [avatarId, script, voiceId, audioAssetId, onComplete, onError]);
   
   return (
     <motion.div
@@ -47,7 +95,7 @@ const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => 
       className="max-w-3xl mx-auto px-4 py-16 text-center"
     >
       <h2 className="text-2xl font-bold text-gray-900 mb-2">
-        {getStatusText()}
+        {status}
       </h2>
       <p className="text-gray-600 mb-8">
         This may take a few minutes. Please don't close this window.
@@ -58,29 +106,40 @@ const ProgressScreen: React.FC<ProgressScreenProps> = ({ status, progress }) => 
       </div>
       <p className="text-sm text-gray-500">{progress}% complete</p>
       
-      <div className="mt-2 text-xs text-gray-400">
-        {getDebugInfo()}
+      <div className="status-message">
+        {status === 'Initializing...' && (
+          <p>Preparing to generate your video...</p>
+        )}
+        {status === 'Generating video...' && (
+          <p>Creating your video with the provided script and avatar...</p>
+        )}
+        {status === 'Processing video...' && (
+          <p>Processing and optimizing your video...</p>
+        )}
+        {status === 'Video ready!' && (
+          <p>Your video is ready to view!</p>
+        )}
       </div>
       
       <div className="mt-12 flex justify-center space-x-16">
         <StatusStep
           label="Upload"
-          isActive={status === 'uploading'}
-          isComplete={['training', 'voicing', 'rendering'].includes(status)}
+          isActive={status === 'Initializing...'}
+          isComplete={['Processing video...', 'Video ready!'].includes(status)}
         />
         <StatusStep
           label="Train"
-          isActive={status === 'training'}
-          isComplete={['voicing', 'rendering'].includes(status)}
+          isActive={status === 'Processing video...'}
+          isComplete={['Video ready!'].includes(status)}
         />
         <StatusStep
           label="Voice"
-          isActive={status === 'voicing'}
-          isComplete={['rendering'].includes(status)}
+          isActive={status === 'Processing video...'}
+          isComplete={['Video ready!'].includes(status)}
         />
         <StatusStep
           label="Render"
-          isActive={status === 'rendering'}
+          isActive={status === 'Video ready!'}
           isComplete={false}
         />
       </div>
@@ -114,5 +173,3 @@ const StatusStep: React.FC<StatusStepProps> = ({ label, isActive, isComplete }) 
     </div>
   );
 };
-
-export default ProgressScreen;

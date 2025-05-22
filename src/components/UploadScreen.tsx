@@ -1,119 +1,135 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import posthog from "posthog-js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { uploadAsset, createAvatarGroup, trainAvatarGroup, generateSpeech } from '../lib/heygen';
+import type { UploadResult } from '../lib/heygen';
 
 interface UploadScreenProps {
-  onSubmit: (photo: File, audio: Blob, script: string) => void;
+  onComplete: (data: {
+    avatarId: string;
+    voiceId?: string;
+    audioAssetId?: string;
+    script: string;
+  }) => void;
 }
 
-const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [recordingTime, setRecordingTime] = useState<number>(0);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [script, setScript] = useState<string>("");
-  const [audioSource, setAudioSource] = useState<"record" | "upload">("record");
+export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
+  const [script, setScript] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('');
+  const [audioMode, setAudioMode] = useState<'record' | 'upload'>('record');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<BlobPart[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   
-  // Handle photo upload
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === "image/jpeg" || file.type === "image/png") {
-        setPhoto(file);
-        // Disabled posthog for now
-        // posthog.capture("Photo Uploaded", { fileType: file.type });
-      } else {
-        toast.error("Please upload a JPG or PNG image");
-      }
-    }
+  // Handle image selection and upload
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSelectedImage(file);
+    setError(null);
+    setStatus('');
   };
   
-  // Handle audio file upload
-  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Check if it's an audio file
-      if (file.type.startsWith("audio/")) {
-        // Convert File to Blob
-        file.arrayBuffer().then(buffer => {
-          const blob = new Blob([buffer], { type: file.type });
-          setAudioBlob(blob);
-          // Disabled posthog for now
-          // posthog.capture("Audio Uploaded", { fileType: file.type });
-        });
-      } else {
-        toast.error("Please upload an audio file (MP3, WAV, etc.)");
-      }
-    }
+  // Handle audio file selection
+  const handleAudioSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSelectedAudio(file);
+    setError(null);
+    setStatus('');
   };
   
-  // Start recording audio
+  // Handle audio recording
   const startRecording = async () => {
     try {
-      audioChunksRef.current = [];
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      
-      mediaRecorderRef.current.ondataavailable = (e) => {
-        audioChunksRef.current.push(e.data);
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
-      
-      mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(audioBlob);
-        setIsRecording(false);
-        // Disabled posthog for now
-        // posthog.capture("Voice Recorded", { duration: recordingTime });
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+        setSelectedAudio(audioFile);
+        // Do NOT upload/process audio here
       };
-      
-      mediaRecorderRef.current.start();
+      mediaRecorder.start();
       setIsRecording(true);
-      setRecordingTime(0);
-      
-      // Start timer
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-      toast.error("Could not access microphone. Please check your permissions.");
+      setStatus('Recording...');
+    } catch (err) {
+      setError('Failed to start recording: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
   
-  // Stop recording audio
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      if (timerRef.current) clearInterval(timerRef.current);
-      
-      // Stop all audio tracks
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      setStatus('Processing recording...');
     }
   };
   
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (photo && audioBlob && script.trim()) {
-      onSubmit(photo, audioBlob, script);
-      // Disabled posthog for now
-      // posthog.capture("Generation Started", { scriptLength: script.length });
-    } else {
-      toast.error("Please upload a photo, provide audio, and enter a script");
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedImage || !script || (audioMode === 'upload' && !selectedAudio) || (audioMode === 'record' && !selectedAudio)) {
+      setError('Please select an image, provide your voice, and enter a script');
+      return;
+    }
+    setStatus('Uploading image...');
+    setIsProcessing(true);
+    setError(null);
+    try {
+      // 1. Upload image
+      const imageResult = await uploadAsset(selectedImage);
+      // Asset ID extraction for image
+      const imageAssetId = imageResult.asset_id || imageResult.data?.asset_id;
+      if (!imageAssetId) throw new Error('Image asset ID missing from upload response');
+      setStatus('Uploading audio...');
+      // 2. Upload audio (if provided)
+      let voiceId: string | undefined = undefined;
+      let audioAssetId: string | undefined = undefined;
+      if (selectedAudio) {
+        // Only upload/process audio and create voice here
+        const audioResult = await uploadAsset(selectedAudio);
+        audioAssetId = audioResult.asset_id || audioResult.data?.asset_id;
+        voiceId = audioResult.voice_id;
+      }
+      setStatus('Creating avatar group...');
+      // 3. Create avatar group
+      const groupResult = await createAvatarGroup(imageAssetId);
+      const groupId = groupResult.data.group_id;
+      setStatus('Training avatar...');
+      // 4. Train avatar group
+      await trainAvatarGroup(groupId);
+      setStatus('Ready!');
+      // 5. Call onComplete with all IDs
+      onComplete({
+        avatarId: groupId,
+        voiceId,
+        audioAssetId,
+        script,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process video');
+      setStatus('');
+    } finally {
+      setIsProcessing(false);
     }
   };
-  
-  // Check if all required fields are filled
-  const isFormValid = !!photo && !!audioBlob && !!script.trim() && 
-    (audioSource === "upload" || (audioSource === "record" && recordingTime >= 15));
   
   return (
     <motion.div
@@ -134,40 +150,32 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Upload Your Photo</label>
               <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6">
-                {photo ? (
+                {selectedImage ? (
                   <div className="text-center">
                     <img 
-                      src={URL.createObjectURL(photo)} 
+                      src={URL.createObjectURL(selectedImage)} 
                       alt="Preview" 
                       className="mx-auto h-40 w-auto object-cover mb-2 rounded"
                     />
-                    <p className="text-sm text-gray-500">{photo.name}</p>
+                    <p className="text-sm text-gray-500">{selectedImage.name}</p>
                     <Button 
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setPhoto(null)}
+                      onClick={() => setSelectedImage(null)}
                       className="mt-2"
                     >
                       Change Photo
                     </Button>
                   </div>
                 ) : (
-                  <div className="text-center">
+                  <div className="w-full text-center">
                     <input
-                      id="photo-upload"
                       type="file"
-                      accept="image/jpeg,image/png"
-                      onChange={handlePhotoChange}
-                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="mx-auto"
                     />
-                    <label
-                      htmlFor="photo-upload"
-                      className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      Select Photo (JPG/PNG)
-                    </label>
-                    <p className="mt-2 text-xs text-gray-500">Select a clear photo of your face</p>
                   </div>
                 )}
               </div>
@@ -176,7 +184,10 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
             {/* Audio Section - with tabs for Recording vs Uploading */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Provide Your Voice</label>
-              <Tabs value={audioSource} onValueChange={(value) => setAudioSource(value as "record" | "upload")}>
+              <Tabs value={audioMode} onValueChange={(value) => {
+                setAudioMode(value as 'record' | 'upload');
+                setSelectedAudio(null);
+              }}>
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="record">Record Voice</TabsTrigger>
                   <TabsTrigger value="upload">Upload Audio</TabsTrigger>
@@ -184,39 +195,26 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
                 
                 <TabsContent value="record" className="border border-gray-300 rounded-lg p-6">
                   <div className="flex flex-col items-center justify-center">
-                    {audioBlob && audioSource === "record" ? (
+                    {selectedAudio ? (
                       <div className="w-full text-center">
-                        <audio src={URL.createObjectURL(audioBlob)} controls className="w-full mb-2" />
+                        <audio src={URL.createObjectURL(selectedAudio)} controls className="w-full mb-2" />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setAudioBlob(null)}
+                          onClick={() => setSelectedAudio(null)}
                         >
                           Record Again
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-center">
-                        <div className="mb-2 text-2xl font-bold">
-                          {isRecording ? `${recordingTime}s` : "Ready"}
-                        </div>
-                        <Button
-                          type="button"
-                          variant={isRecording ? "destructive" : "default"}
-                          onClick={isRecording ? stopRecording : startRecording}
-                          className={`${isRecording ? "bg-red-600" : "bg-indigo-600"} text-white`}
-                        >
-                          {isRecording ? "Stop Recording" : "Start Recording"}
-                        </Button>
-                        {isRecording && recordingTime < 15 && (
-                          <p className="mt-2 text-sm text-amber-500">
-                            Please record for at least 15 seconds ({15 - recordingTime}s remaining)
-                          </p>
+                      <div className="w-full text-center">
+                        {isRecording ? (
+                          <Button type="button" variant="destructive" onClick={stopRecording} className="mb-2">Stop Recording</Button>
+                        ) : (
+                          <Button type="button" onClick={startRecording} className="mb-2">Start Recording</Button>
                         )}
-                        <p className="mt-2 text-xs text-gray-500">
-                          Record at least 15 seconds of your voice speaking clearly
-                        </p>
+                        <p className="text-xs text-gray-500">Record your voice using your microphone.</p>
                       </div>
                     )}
                   </div>
@@ -224,36 +222,27 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
                 
                 <TabsContent value="upload" className="border border-gray-300 rounded-lg p-6">
                   <div className="flex flex-col items-center justify-center">
-                    {audioBlob && audioSource === "upload" ? (
+                    {selectedAudio ? (
                       <div className="w-full text-center">
-                        <audio src={URL.createObjectURL(audioBlob)} controls className="w-full mb-2" />
+                        <audio src={URL.createObjectURL(selectedAudio)} controls className="w-full mb-2" />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setAudioBlob(null)}
+                          onClick={() => setSelectedAudio(null)}
                         >
                           Change Audio File
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-center">
+                      <div className="w-full text-center">
                         <input
-                          id="audio-upload"
                           type="file"
                           accept="audio/*"
-                          onChange={handleAudioUpload}
-                          className="hidden"
+                          onChange={handleAudioSelect}
+                          className="mx-auto"
                         />
-                        <label
-                          htmlFor="audio-upload"
-                          className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                          Select Audio File
-                        </label>
-                        <p className="mt-2 text-xs text-gray-500">
-                          Upload an audio file of your voice (MP3, WAV, etc.)
-                        </p>
+                        <p className="text-xs text-gray-500 mt-2">Upload a pre-recorded audio file.</p>
                       </div>
                     )}
                   </div>
@@ -273,17 +262,21 @@ const UploadScreen: React.FC<UploadScreenProps> = ({ onSubmit }) => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={4}
                 placeholder="Enter the text your AI avatar will say..."
+                disabled={isProcessing}
               />
             </div>
           </div>
         </Card>
         
+        {error && <div className="error text-red-600 mb-2">{error}</div>}
+        {status && <div className="status text-blue-600 mb-2">{status}</div>}
+        
         <Button
           type="submit"
-          disabled={!isFormValid}
+          disabled={isProcessing || !selectedImage || !script || (audioMode === 'upload' && !selectedAudio) || (audioMode === 'record' && !selectedAudio)}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-gray-300"
         >
-          Create AI Video
+          {isProcessing ? 'Processing...' : 'Create AI Video'}
         </Button>
       </form>
     </motion.div>
