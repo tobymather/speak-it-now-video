@@ -1,18 +1,18 @@
 export const VOICE_SCRIPTS = [
   {
     id: 'script1',
-    title: 'Welcome Message',
-    text: "Hello! I'm excited to be speaking with you today. This is a demonstration of my AI-generated voice, created using ElevenLabs technology. I hope you find this experience engaging and natural."
+    title: 'After 10 lessons: CEFR Pre-A1',
+    text: "Hello mum! My name is {child_name}! I am {age} years old. I like football and singing. I go to the park and play football with my friends."
   },
   {
     id: 'script2',
-    title: 'Story Time',
-    text: "Once upon a time, in a world not so different from our own, there lived a curious mind that dreamed of creating voices that could touch hearts and inspire minds. Through the magic of technology, that dream became a reality."
+    title: 'After 50 lessons: CEFR A1',
+    text: "Hello mum! It's me, {child_name}. I love playing football with my friends. Yesterday, I played football and volleyball for 2 hours."
   },
   {
     id: 'script3',
-    title: 'Technical Overview',
-    text: "This voice was created using advanced AI technology from ElevenLabs. The system analyzes voice samples to understand unique characteristics like tone, pitch, and speaking style, then generates new speech that maintains these qualities while delivering any message."
+    title: 'After 100 lessons: CEFR A2',
+    text: "Hello mum! It's me, {child_name}. I am getting better at English, and my football is also getting better. Did you know that I love volleyball too? When I'm older, I want to become an English teacher, or a professional football player. Thank you for giving me English lessons to help me with my dream!"
   }
 ] as const;
 

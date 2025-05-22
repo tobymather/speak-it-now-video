@@ -8,6 +8,8 @@ import type { UploadResult } from '../lib/heygen';
 
 interface ResultScreenProps {
   voiceId: string;
+  childName: string;
+  age: string;
   onReset: () => void;
 }
 
@@ -19,7 +21,7 @@ interface AudioResult {
   error?: string;
 }
 
-export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, onReset }) => {
+export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, age, onReset }) => {
   const [results, setResults] = useState<AudioResult[]>(
     VOICE_SCRIPTS.map(script => ({
       scriptId: script.id,
@@ -34,7 +36,9 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, onReset }) 
       const newResults = await Promise.all(
         VOICE_SCRIPTS.map(async (script) => {
           try {
-            const result = await generateSpeech(voiceId, script.text);
+            let scriptText = script.text.replace(/\{child_name\}/g, childName);
+            scriptText = scriptText.replace(/\{age\}/g, age);
+            const result = await generateSpeech(voiceId, scriptText);
             return {
               scriptId: script.id,
               title: script.title,
@@ -56,7 +60,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, onReset }) 
     };
 
     generateAllAudio();
-  }, [voiceId]);
+  }, [voiceId, childName, age]);
 
   return (
     <motion.div
@@ -66,8 +70,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, onReset }) 
       className="max-w-3xl mx-auto px-4 py-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your AI Voice Samples</h1>
-        <p className="text-gray-600 mt-2">Listen to your AI voice reading different scripts</p>
+        <h1 className="text-3xl font-bold text-gray-900">Your child's future English level:</h1>
+        <p className="text-gray-600 mt-2">Here's the progress your child will make with Novakid</p>
       </div>
 
       <div className="space-y-6">

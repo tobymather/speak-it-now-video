@@ -18,16 +18,22 @@ if (typeof window !== 'undefined' &&
 const Index = () => {
   const [screen, setScreen] = useState<'upload' | 'result'>('upload');
   const [voiceId, setVoiceId] = useState<string | null>(null);
+  const [childName, setChildName] = useState<string | null>(null);
+  const [age, setAge] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUploadComplete = async (data: { voiceId: string }) => {
+  const handleUploadComplete = async (data: { voiceId: string, childName: string, age: string }) => {
     setVoiceId(data.voiceId);
+    setChildName(data.childName);
+    setAge(data.age);
     setScreen('result');
   };
 
   const handleReset = () => {
     setScreen('upload');
     setVoiceId(null);
+    setChildName(null);
+    setAge(null);
     setError(null);
   };
 
@@ -35,7 +41,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm py-4">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-lg font-semibold text-indigo-600">AI Voice Creator</h1>
+          <h1 className="text-lg font-semibold text-indigo-600">English Level AI Preview</h1>
         </div>
       </header>
       
@@ -48,10 +54,12 @@ const Index = () => {
             />
           )}
           
-          {screen === 'result' && voiceId && (
+          {screen === 'result' && voiceId && childName && age && (
             <ResultScreen
               key="result"
               voiceId={voiceId}
+              childName={childName}
+              age={age}
               onReset={handleReset}
             />
           )}

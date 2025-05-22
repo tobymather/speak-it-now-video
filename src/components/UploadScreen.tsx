@@ -10,6 +10,8 @@ import type { UploadResult } from '../lib/heygen';
 interface UploadScreenProps {
   onComplete: (data: {
     voiceId: string;
+    childName: string;
+    age: string;
   }) => void;
 }
 
@@ -20,6 +22,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [audioMode, setAudioMode] = useState<'record' | 'upload'>('record');
+  const [childName, setChildName] = useState('');
+  const [age, setAge] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -77,20 +81,26 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedAudio) return;
-
+    if (!childName.trim()) {
+      setError('Please enter the child\'s name.');
+      return;
+    }
+    if (!age) {
+      setError('Please select the child\'s age.');
+      return;
+    }
     setIsProcessing(true);
     setError(null);
     setStatus('Processing voice sample...');
-
     try {
       const result = await uploadAsset(selectedAudio);
-      
       if (!result.voice_id) {
         throw new Error('Failed to create voice');
       }
-
       onComplete({
         voiceId: result.voice_id,
+        childName: childName.trim(),
+        age,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process voice');
@@ -108,8 +118,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
       className="max-w-3xl mx-auto px-4 py-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">AI Voice Creator</h1>
-        <p className="text-gray-600 mt-2">Upload or record a voice sample to create your AI voice</p>
+        <h1 className="text-3xl font-bold text-gray-900">English Level AI Preview</h1>
+        <p className="text-gray-600 mt-2">Upload or record a voice sample to create your AI preview</p>
       </div>
       
       <form onSubmit={handleSubmit}>
@@ -164,6 +174,33 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
                 <audio src={URL.createObjectURL(selectedAudio)} controls className="w-full mt-2" />
               </div>
             )}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Child's Name (in English letters)</label>
+              <input
+                type="text"
+                value={childName}
+                onChange={e => setChildName(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter child's name"
+                disabled={isProcessing}
+                required
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+              <select
+                value={age}
+                onChange={e => setAge(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isProcessing}
+                required
+              >
+                <option value="">Select age</option>
+                {Array.from({ length: 14 }, (_, i) => 2 + i).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </Card>
         
@@ -172,7 +209,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
         
         <Button
           type="submit"
-          disabled={isProcessing || !selectedAudio}
+          disabled={isProcessing || !selectedAudio || !childName.trim() || !age}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-gray-300"
         >
           {isProcessing ? 'Processing...' : 'Create AI Voice'}

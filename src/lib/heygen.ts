@@ -178,7 +178,8 @@ export async function generateSpeech(voiceId: string, text: string): Promise<Upl
       model_id: 'eleven_monolingual_v1',
       voice_settings: {
         stability: 0.5,
-        similarity_boost: 0.75
+        similarity_boost: 1.0,
+        speed: 0.8
       }
     }),
   });
@@ -188,7 +189,6 @@ export async function generateSpeech(voiceId: string, text: string): Promise<Upl
     throw new Error(`ElevenLabs API error: ${response.status} - ${error}`);
   }
 
-  // Get the audio as a blob and create an object URL
   const audioBlob = await response.blob();
   const audioUrl = URL.createObjectURL(audioBlob);
 
