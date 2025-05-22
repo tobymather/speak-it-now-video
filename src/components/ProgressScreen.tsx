@@ -9,7 +9,8 @@ interface ProgressScreenProps {
   script: string;
   voiceId?: string;
   audioAssetId?: string;
-  onComplete: (videoUrl: string) => void;
+  progress: number;
+  state: 'idle' | 'uploading' | 'training' | 'voicing' | 'rendering' | 'done';
   onError: (error: string) => void;
 }
 
@@ -18,13 +19,36 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
   script,
   voiceId,
   audioAssetId,
-  onComplete,
+  progress,
+  state,
   onError,
 }) => {
   const [status, setStatus] = useState<string>('Initializing...');
-  const [progress, setProgress] = useState<number>(0);
   const [videoId, setVideoId] = useState<string | null>(null);
   
+  // Update status based on state
+  useEffect(() => {
+    switch (state) {
+      case 'uploading':
+        setStatus('Uploading assets...');
+        break;
+      case 'training':
+        setStatus('Training avatar...');
+        break;
+      case 'voicing':
+        setStatus('Processing voice...');
+        break;
+      case 'rendering':
+        setStatus('Generating video...');
+        break;
+      case 'done':
+        setStatus('Video ready!');
+        break;
+      default:
+        setStatus('Initializing...');
+    }
+  }, [state]);
+
   useEffect(() => {
     let isMounted = true;
     let pollInterval: NodeJS.Timeout;
@@ -32,7 +56,6 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
     const startVideoGeneration = async () => {
       try {
         setStatus('Generating video...');
-        setProgress(10);
         
         // Generate video
         const result = await generateVideo(avatarId, script, voiceId, audioAssetId);
@@ -44,7 +67,6 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
         
         setVideoId(result.data.video_id);
         setStatus('Processing video...');
-        setProgress(30);
         
         // Start polling for video status
         pollInterval = setInterval(async () => {
@@ -54,14 +76,9 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
             
             if (statusResult.data.status === 'completed' && statusResult.data.video_url) {
               clearInterval(pollInterval);
-              setProgress(100);
               setStatus('Video ready!');
-              onComplete(statusResult.data.video_url);
             } else if (statusResult.data.status === 'failed') {
               throw new Error(statusResult.data.error_msg || 'Video processing failed');
-            } else {
-              // Update progress based on status
-              setProgress(prev => Math.min(prev + 5, 90));
             }
           } catch (err) {
             if (isMounted) {
@@ -85,7 +102,7 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
         clearInterval(pollInterval);
       }
     };
-  }, [avatarId, script, voiceId, audioAssetId, onComplete, onError]);
+  }, [avatarId, script, voiceId, audioAssetId, onError]);
   
   return (
     <motion.div

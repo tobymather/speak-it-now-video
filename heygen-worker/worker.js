@@ -1,5 +1,5 @@
 // HeyGen API Cloudflare Worker
-// This worker proxies requests to HeyGen's API while handling CORS and security
+// This worker proxies requests to HeyGen's API while handling CORS
 
 const HEYGEN_API_BASE = 'https://api.heygen.com';
 const HEYGEN_UPLOAD_BASE = 'https://upload.heygen.com';
@@ -7,7 +7,7 @@ const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 
 // Configure CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // TODO: Replace with your domain in production
+  'Access-Control-Allow-Origin': '*', // In production, you'd want to restrict this
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, X-Api-Key, Authorization, xi-api-key',
 };
@@ -40,15 +40,43 @@ function successResponse(data, status = 200) {
   );
 }
 
-// Handle incoming requests
-async function handleRequest(request) {
-  // Handle CORS preflight requests
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders,
+// Handle multipart form data for file uploads
+async function handleFileUpload(request) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+    
+    if (!file) {
+      return errorResponse('No file provided');
+    }
+    
+    // Forward the formData to HeyGen API
+    const apiKey = request.headers.get('X-Api-Key');
+    if (!apiKey) {
+      return errorResponse('API key is required', 401);
+    }
+    
+    // Create new FormData instance to send to HeyGen
+    const newFormData = new FormData();
+    newFormData.append('file', file);
+    
+    const response = await fetch(`${HEYGEN_API_BASE}/v1/asset`, {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': apiKey,
+      },
+      body: newFormData,
     });
+    
+    const responseData = await response.json();
+    return successResponse(responseData, response.status);
+  } catch (error) {
+    return errorResponse(error.message || 'Error processing file upload');
   }
+}
 
+// Handle standard API requests
+async function handleApiRequest(request) {
   try {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -520,7 +548,25 @@ async function handleRequest(request) {
   }
 }
 
-// Register the worker handler
+// Main handler for all requests
+async function handleRequest(request) {
+  // Handle CORS preflight requests
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  const url = new URL(request.url);
+  
+  // Handle asset uploads separately
+  if (url.pathname === '/v1/asset' && request.method === 'POST') {
+    return handleFileUpload(request);
+  }
+  
+  // Handle all other API requests
+  return handleApiRequest(request);
+}
+
+// Register the fetch event handler
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
-}); 
+});
