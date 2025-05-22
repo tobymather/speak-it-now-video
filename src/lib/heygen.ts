@@ -4,15 +4,14 @@
 const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://heygen-proxy.tobymather.workers.dev';
 const HEYGEN_API_KEY = import.meta.env.VITE_HEYGEN_API_KEY;
 const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
+const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 
 // Types
 export interface UploadResult {
-  asset_id: string;
   voice_id?: string;
   provider?: 'elevenlabs';
   data?: {
     url?: string;
-    asset_id?: string;
   };
 }
 
@@ -50,14 +49,9 @@ async function makeWorkerRequest<T>(endpoint: string, options: RequestInit = {})
   const url = `${WORKER_URL}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
-    'X-Api-Key': HEYGEN_API_KEY,
+    'xi-api-key': ELEVENLABS_API_KEY,
     ...(options.headers || {}),
   };
-
-  // Add ElevenLabs API key if needed
-  if (endpoint.startsWith('/elevenlabs/') || endpoint === '/v1/voice.add') {
-    headers['xi-api-key'] = ELEVENLABS_API_KEY;
-  }
 
   const response = await fetch(url, {
     ...options,
@@ -72,84 +66,68 @@ async function makeWorkerRequest<T>(endpoint: string, options: RequestInit = {})
   return response.json();
 }
 
-// Upload an asset (image or audio) to HeyGen
+// Helper function to make API requests to ElevenLabs
+async function makeElevenLabsRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${ELEVENLABS_API_BASE}${endpoint}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    'xi-api-key': ELEVENLABS_API_KEY,
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`ElevenLabs API error: ${response.status} - ${error}`);
+  }
+
+  return response.json();
+}
+
+// Upload an audio file to create an ElevenLabs voice
 export async function uploadAsset(file: File): Promise<UploadResult> {
   console.log('Uploading asset:', file.name, file.type);
   
-  // Special handling for audio files - create ElevenLabs voice first
-  if (file.type.startsWith('audio/')) {
-    try {
-      // 1. Create voice in ElevenLabs
-      console.log('Creating voice in ElevenLabs');
-      const formData = new FormData();
-      formData.append('files', file);
-      formData.append('name', `Voice ${Date.now()}`);
-      
-      const voiceResponse = await fetch(`${WORKER_URL}/elevenlabs/voices/add`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-        },
-        body: formData,
-      });
-      
-      if (!voiceResponse.ok) {
-        const error = await voiceResponse.text();
-        throw new Error(`ElevenLabs voice creation failed: ${voiceResponse.status} - ${error}`);
-      }
-      
-      const voiceData = await voiceResponse.json();
-      console.log('Voice created in ElevenLabs:', voiceData);
-      
-      // 2. Link voice to HeyGen
-      console.log('Linking voice to HeyGen');
-      const linkResponse = await makeWorkerRequest<{ data: { voice_id: string } }>('/v1/voice.add', {
-        method: 'POST',
-        body: JSON.stringify({
-          voice_id: voiceData.voice_id,
-        }),
-      });
-      
-      console.log('Voice linked to HeyGen:', linkResponse);
-      
-      // Return both the ElevenLabs voice ID and HeyGen voice ID
-      return {
-        asset_id: linkResponse.data.voice_id,
-        voice_id: voiceData.voice_id,
-        provider: 'elevenlabs',
-      };
-    } catch (error) {
-      console.error('Error creating voice:', error);
-      throw error;
+  if (!file.type.startsWith('audio/')) {
+    throw new Error('Only audio files are supported');
+  }
+
+  try {
+    // Create voice in ElevenLabs
+    console.log('Creating voice in ElevenLabs');
+    const formData = new FormData();
+    formData.append('files', file);
+    formData.append('name', `Voice ${Date.now()}`);
+    
+    const voiceResponse = await fetch(`${ELEVENLABS_API_BASE}/voices/add`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+      body: formData,
+    });
+    
+    if (!voiceResponse.ok) {
+      const error = await voiceResponse.text();
+      throw new Error(`ElevenLabs voice creation failed: ${voiceResponse.status} - ${error}`);
     }
-  }
-  
-  // For images, use the regular upload process
-  const response = await fetch(`${WORKER_URL}/v1/asset`, {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': HEYGEN_API_KEY,
-    },
-    body: file,
-  });
-  
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Upload failed: ${response.status} - ${error}`);
-  }
-  
-  const data = await response.json();
-  console.log('Asset uploaded successfully:', data);
-  
-  // For images, format the key correctly
-  if (file.type.startsWith('image/')) {
+    
+    const voiceData = await voiceResponse.json();
+    console.log('Voice created in ElevenLabs:', voiceData);
+    
+    // Return just the ElevenLabs voice ID
     return {
-      ...data,
-      asset_id: `image/${data.data.asset_id}/original`,
+      voice_id: voiceData.voice_id,
+      provider: 'elevenlabs',
     };
+  } catch (error) {
+    console.error('Error creating voice:', error);
+    throw error;
   }
-  
-  return data;
 }
 
 // Create an avatar group from uploaded images
@@ -188,14 +166,39 @@ export async function checkTrainingStatus(groupId: string): Promise<TrainingStat
 // Generate speech from text using ElevenLabs
 export async function generateSpeech(voiceId: string, text: string): Promise<UploadResult> {
   console.log('Generating speech for text:', text);
-  
-  return makeWorkerRequest<UploadResult>('/elevenlabs/text-to-speech', {
+
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
+    headers: {
+      'xi-api-key': import.meta.env.VITE_ELEVENLABS_API_KEY,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
-      voice_id: voiceId,
       text: text,
+      model_id: 'eleven_monolingual_v1',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75
+      }
     }),
   });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`ElevenLabs API error: ${response.status} - ${error}`);
+  }
+
+  // Get the audio as a blob and create an object URL
+  const audioBlob = await response.blob();
+  const audioUrl = URL.createObjectURL(audioBlob);
+
+  return {
+    voice_id: voiceId,
+    provider: 'elevenlabs',
+    data: {
+      url: audioUrl
+    }
+  };
 }
 
 // Generate a video
