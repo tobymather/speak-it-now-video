@@ -31,8 +31,8 @@ export interface TrainingStatus {
 export interface VideoResult {
   data: {
     video_id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
     video_url?: string;
-    status: 'processing' | 'completed' | 'failed';
     error_msg?: string;
   };
 }
@@ -44,23 +44,41 @@ export interface ScriptPayload {
   audio_asset_id?: string;
 }
 
-// Helper function to make API requests through the worker
+interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  created_at_unix: number;
+  category: string;
+  is_owner: boolean;
+}
+
+interface ElevenLabsVoicesResponse {
+  voices: ElevenLabsVoice[];
+  has_more: boolean;
+  total_count: number;
+  next_page_token?: string;
+}
+
+// Helper function to make requests with error handling
 async function makeWorkerRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${WORKER_URL}${endpoint}`;
-  const headers = {
+  
+  const defaultHeaders = {
     'Content-Type': 'application/json',
-    'xi-api-key': ELEVENLABS_API_KEY,
-    ...(options.headers || {}),
+    'X-Api-Key': HEYGEN_API_KEY,
   };
 
   const response = await fetch(url, {
     ...options,
-    headers,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`API error: ${response.status} - ${error}`);
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${response.status} - ${errorText}`);
   }
 
   return response.json();
@@ -88,6 +106,80 @@ async function makeElevenLabsRequest<T>(endpoint: string, options: RequestInit =
   return response.json();
 }
 
+// Clean up old ElevenLabs voices (older than 1 hour)
+export async function cleanupOldVoices(): Promise<{ deleted: number; errors: string[] }> {
+  console.log('Starting voice cleanup...');
+  
+  try {
+    // Calculate cutoff time (1 hour ago)
+    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600; // 3600 seconds = 1 hour
+    
+    // Get all personal voices, sorted by creation date (oldest first)
+    // Note: Using v2 endpoint directly, not the v1 base URL
+    const response = await fetch(`https://api.elevenlabs.io/v2/voices?voice_type=personal&sort=created_at_unix&sort_direction=asc&page_size=100`, {
+      method: 'GET',
+      headers: {
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch voices: ${response.status}`);
+    }
+
+    const voicesData: ElevenLabsVoicesResponse = await response.json();
+    console.log(`Found ${voicesData.total_count} personal voices`);
+
+    // Filter voices older than 1 hour
+    const voicesToDelete = voicesData.voices.filter(voice => 
+      voice.created_at_unix < oneHourAgo && voice.is_owner
+    );
+
+    console.log(`Found ${voicesToDelete.length} voices older than 1 hour to delete`);
+
+    if (voicesToDelete.length === 0) {
+      return { deleted: 0, errors: [] };
+    }
+
+    // Delete each old voice
+    const results = await Promise.allSettled(
+      voicesToDelete.map(async (voice) => {
+        console.log(`Deleting voice: ${voice.name} (${voice.voice_id})`);
+        
+        const deleteResponse = await fetch(`${ELEVENLABS_API_BASE}/voices/${voice.voice_id}`, {
+          method: 'DELETE',
+          headers: {
+            'xi-api-key': ELEVENLABS_API_KEY,
+          },
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error(`Failed to delete voice ${voice.voice_id}: ${deleteResponse.status}`);
+        }
+
+        return voice.voice_id;
+      })
+    );
+
+    // Count successful deletions and collect errors
+    const deleted = results.filter(result => result.status === 'fulfilled').length;
+    const errors = results
+      .filter(result => result.status === 'rejected')
+      .map(result => (result as PromiseRejectedResult).reason.message);
+
+    console.log(`Voice cleanup completed: ${deleted} deleted, ${errors.length} errors`);
+    
+    return { deleted, errors };
+
+  } catch (error) {
+    console.error('Voice cleanup failed:', error);
+    return { 
+      deleted: 0, 
+      errors: [error instanceof Error ? error.message : 'Unknown cleanup error'] 
+    };
+  }
+}
+
 // Upload an audio file to create an ElevenLabs voice
 export async function uploadAsset(file: File): Promise<UploadResult> {
   console.log('Uploading asset:', file.name, file.type);
@@ -97,6 +189,17 @@ export async function uploadAsset(file: File): Promise<UploadResult> {
   }
 
   try {
+    // Clean up old voices before creating a new one
+    console.log('Cleaning up old voices before creating new voice...');
+    const cleanupResult = await cleanupOldVoices();
+    
+    if (cleanupResult.errors.length > 0) {
+      console.warn('Some voices could not be deleted:', cleanupResult.errors);
+      // Continue with voice creation even if cleanup had some errors
+    }
+    
+    console.log(`Cleanup completed: ${cleanupResult.deleted} voices deleted`);
+
     // Create voice in ElevenLabs
     console.log('Creating voice in ElevenLabs');
     const formData = new FormData();
@@ -292,8 +395,11 @@ export async function pollVideo(videoId: string): Promise<{
     throw new Error(status.data.error_msg || 'Video generation failed');
   }
   
+  // Map 'pending' status to 'processing' for consistency
+  const mappedStatus = status.data.status === 'pending' ? 'processing' : status.data.status;
+  
   return {
-    status: status.data.status,
+    status: mappedStatus as 'processing' | 'completed' | 'failed',
     video_url: status.data.video_url,
   };
 } 
