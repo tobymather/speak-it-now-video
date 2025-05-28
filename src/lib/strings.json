@@ -1,0 +1,132 @@
+{
+  "en": {
+    "nav": {
+      "title": "English Level AI Preview"
+    },
+    "upload": {
+      "title": "English Level AI Preview",
+      "subtitle": "Record a voice sample to create your AI preview",
+      "recordButton": "Start Recording",
+      "stopButton": "Stop Recording",
+      "recordTooltip": "Please record 10-20 seconds of your child talking in their language",
+      "childNameLabel": "Child's Name (in English letters)",
+      "childNamePlaceholder": "Enter child's name",
+      "ageLabel": "Age",
+      "ageSelect": "Select age",
+      "favouriteFoodLabel": "Favourite Food",
+      "favouriteFoodSelect": "Select favourite food",
+      "favouriteSportLabel": "Favourite Sport",
+      "favouriteSportSelect": "Select favourite sport",
+      "createButton": "Create AI Voice",
+      "processing": "Processing...",
+      "recording": "Recording...",
+      "recordingSaved": "Recording saved",
+      "selectedAudio": "Selected audio:",
+      "errors": {
+        "enterName": "Please enter the child's name.",
+        "selectAge": "Please select the child's age.",
+        "selectFood": "Please select the child's favourite food.",
+        "selectSport": "Please select the child's favourite sport.",
+        "microphoneAccess": "Failed to access microphone",
+        "processingFailed": "Failed to process voice"
+      }
+    },
+    "result": {
+      "title": "Your child's future English level:",
+      "subtitle": "Here's how your child will sound after 100 lessons with Novakid",
+      "scriptTitle": "After 100 lessons: CEFR A1",
+      "generating": "Generating audio...",
+      "ctaTitle": "Ready to start your child's English journey?",
+      "ctaSubtitle": "Book a free trial lesson with Novakid and see your child's progress firsthand!",
+      "ctaButton": "Try a Free Trial Lesson",
+      "resetButton": "Create Another Voice"
+    },
+    "foods": {
+      "pizza": "Pizza",
+      "ice cream": "Ice Cream",
+      "chocolate": "Chocolate",
+      "pasta": "Pasta",
+      "burgers": "Burgers",
+      "cookies": "Cookies",
+      "apples": "Apples",
+      "sandwiches": "Sandwiches",
+      "chicken": "Chicken"
+    },
+    "sports": {
+      "football": "Football",
+      "basketball": "Basketball",
+      "tennis": "Tennis",
+      "swimming": "Swimming",
+      "soccer": "Soccer",
+      "baseball": "Baseball",
+      "volleyball": "Volleyball",
+      "gymnastics": "Gymnastics",
+      "running": "Running"
+    }
+  },
+  "ro": {
+    "nav": {
+      "title": "Previzualizare AI Nivel Engleză"
+    },
+    "upload": {
+      "title": "Previzualizare AI Nivel Engleză",
+      "subtitle": "Înregistrează o mostră de voce pentru a crea previzualizarea AI",
+      "recordButton": "Începe Înregistrarea",
+      "stopButton": "Oprește Înregistrarea",
+      "recordTooltip": "Te rugăm să înregistrezi 10-20 de secunde cu copilul tău vorbind în limba sa",
+      "childNameLabel": "Numele Copilului (cu litere engleze)",
+      "childNamePlaceholder": "Introdu numele copilului",
+      "ageLabel": "Vârsta",
+      "ageSelect": "Selectează vârsta",
+      "favouriteFoodLabel": "Mâncarea Preferată",
+      "favouriteFoodSelect": "Selectează mâncarea preferată",
+      "favouriteSportLabel": "Sportul Preferat",
+      "favouriteSportSelect": "Selectează sportul preferat",
+      "createButton": "Creează Vocea AI",
+      "processing": "Se procesează...",
+      "recording": "Se înregistrează...",
+      "recordingSaved": "Înregistrare salvată",
+      "selectedAudio": "Audio selectat:",
+      "errors": {
+        "enterName": "Te rugăm să introduci numele copilului.",
+        "selectAge": "Te rugăm să selectezi vârsta copilului.",
+        "selectFood": "Te rugăm să selectezi mâncarea preferată a copilului.",
+        "selectSport": "Te rugăm să selectezi sportul preferat al copilului.",
+        "microphoneAccess": "Nu s-a putut accesa microfonul",
+        "processingFailed": "Nu s-a putut procesa vocea"
+      }
+    },
+    "result": {
+      "title": "Nivelul viitor de engleză al copilului tău:",
+      "subtitle": "Iată cum va suna copilul tău după 100 de lecții cu Novakid",
+      "scriptTitle": "După 100 de lecții: CEFR A1",
+      "generating": "Se generează audio...",
+      "ctaTitle": "Gata să începi călătoria în engleză a copilului tău?",
+      "ctaSubtitle": "Rezervă o lecție de probă gratuită cu Novakid și vezi progresul copilului tău în direct!",
+      "ctaButton": "Încearcă o Lecție de Probă Gratuită",
+      "resetButton": "Creează o Altă Voce"
+    },
+    "foods": {
+      "pizza": "Pizza",
+      "ice cream": "Înghețată",
+      "chocolate": "Ciocolată",
+      "pasta": "Paste",
+      "burgers": "Burgeri",
+      "cookies": "Biscuiți",
+      "apples": "Mere",
+      "sandwiches": "Sandvișuri",
+      "chicken": "Pui"
+    },
+    "sports": {
+      "football": "Fotbal",
+      "basketball": "Baschet",
+      "tennis": "Tenis",
+      "swimming": "Înot",
+      "soccer": "Fotbal",
+      "baseball": "Baseball",
+      "volleyball": "Volei",
+      "gymnastics": "Gimnastică",
+      "running": "Alergare"
+    }
+  }
+} 

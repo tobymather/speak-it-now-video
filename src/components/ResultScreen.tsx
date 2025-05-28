@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+import { useLocalization } from '@/contexts/LocalizationContext';
 import { generateSpeech } from '../lib/heygen';
 import { VOICE_SCRIPTS } from '../lib/scripts';
+import strings from '../lib/strings.json';
 import type { UploadResult } from '../lib/heygen';
 
 interface ResultScreenProps {
@@ -24,14 +26,25 @@ interface AudioResult {
 }
 
 export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, age, favouriteFood, favouriteSport, onReset }) => {
+  const { t } = useLocalization();
   const [results, setResults] = useState<AudioResult[]>(
     VOICE_SCRIPTS.map(script => ({
       scriptId: script.id,
-      title: script.title,
+      title: '', // Will be set after component mounts
       audioUrl: '',
       isLoading: true,
     }))
   );
+
+  // Update titles when language changes
+  useEffect(() => {
+    setResults(prevResults => 
+      prevResults.map(result => ({
+        ...result,
+        title: t('result.scriptTitle')
+      }))
+    );
+  }, [t]);
 
   useEffect(() => {
     const generateAllAudio = async () => {
@@ -40,19 +53,25 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
           try {
             let scriptText = script.text.replace(/\{child_name\}/g, childName);
             scriptText = scriptText.replace(/\{age\}/g, age);
-            scriptText = scriptText.replace(/\{favourite_food\}/g, favouriteFood);
-            scriptText = scriptText.replace(/\{favourite_sport\}/g, favouriteSport);
+            
+            // Always use English values for food and sport in the script sent to ElevenLabs
+            const englishFoodValue = strings.en.foods[favouriteFood as keyof typeof strings.en.foods] || favouriteFood;
+            const englishSportValue = strings.en.sports[favouriteSport as keyof typeof strings.en.sports] || favouriteSport;
+            
+            scriptText = scriptText.replace(/\{favourite_food\}/g, englishFoodValue);
+            scriptText = scriptText.replace(/\{favourite_sport\}/g, englishSportValue);
+            
             const result = await generateSpeech(voiceId, scriptText);
             return {
               scriptId: script.id,
-              title: script.title,
+              title: t('result.scriptTitle'),
               audioUrl: result.data?.url || '',
               isLoading: false,
             };
           } catch (error) {
             return {
               scriptId: script.id,
-              title: script.title,
+              title: t('result.scriptTitle'),
               audioUrl: '',
               isLoading: false,
               error: error instanceof Error ? error.message : 'Failed to generate audio',
@@ -64,7 +83,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
     };
 
     generateAllAudio();
-  }, [voiceId, childName, age, favouriteFood, favouriteSport]);
+  }, [voiceId, childName, age, favouriteFood, favouriteSport]); // Remove 't' from dependencies
 
   return (
     <motion.div
@@ -74,8 +93,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
       className="max-w-3xl mx-auto px-4 py-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your child's future English level:</h1>
-        <p className="text-gray-600 mt-2">Here's how your child will sound after 100 lessons with Novakid</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('result.title')}</h1>
+        <p className="text-gray-600 mt-2">{t('result.subtitle')}</p>
       </div>
 
       <div className="space-y-6">
@@ -84,7 +103,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
             <h2 className="text-xl font-semibold mb-4">{result.title}</h2>
             {result.isLoading ? (
               <div className="text-center py-4">
-                <p className="text-gray-600">Generating audio...</p>
+                <p className="text-gray-600">{t('result.generating')}</p>
               </div>
             ) : result.error ? (
               <div className="text-center py-4">
@@ -105,10 +124,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
       <div className="mt-8 text-center space-y-4">
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Ready to start your child's English journey?
+            {t('result.ctaTitle')}
           </h3>
           <p className="text-gray-600 mb-4">
-            Book a free trial lesson with Novakid and see your child's progress firsthand!
+            {t('result.ctaSubtitle')}
           </p>
           <Button
             asChild
@@ -119,12 +138,18 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
               target="_blank"
               rel="noopener noreferrer"
             >
-              Try a Free Trial Lesson
+              {t('result.ctaButton')}
             </a>
           </Button>
         </div>
         
-
+        <Button
+          onClick={onReset}
+          variant="outline"
+          className="w-full sm:w-auto"
+        >
+          {t('result.resetButton')}
+        </Button>
       </div>
     </motion.div>
   );
