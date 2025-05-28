@@ -20,12 +20,16 @@ const Index = () => {
   const [voiceId, setVoiceId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
   const [age, setAge] = useState<string | null>(null);
+  const [favouriteFood, setFavouriteFood] = useState<string | null>(null);
+  const [favouriteSport, setFavouriteSport] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUploadComplete = async (data: { voiceId: string, childName: string, age: string }) => {
+  const handleUploadComplete = async (data: { voiceId: string, childName: string, age: string, favouriteFood: string, favouriteSport: string }) => {
     setVoiceId(data.voiceId);
     setChildName(data.childName);
     setAge(data.age);
+    setFavouriteFood(data.favouriteFood);
+    setFavouriteSport(data.favouriteSport);
     setScreen('result');
   };
 
@@ -34,14 +38,23 @@ const Index = () => {
     setVoiceId(null);
     setChildName(null);
     setAge(null);
+    setFavouriteFood(null);
+    setFavouriteSport(null);
     setError(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-lg font-semibold text-indigo-600">English Level AI Preview</h1>
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/novakid-logo.png" 
+              alt="Novakid" 
+              className="h-8 w-auto"
+            />
+            <span className="text-lg font-semibold text-gray-700">English Level AI Preview</span>
+          </div>
         </div>
       </header>
       
@@ -54,12 +67,14 @@ const Index = () => {
             />
           )}
           
-          {screen === 'result' && voiceId && childName && age && (
+          {screen === 'result' && voiceId && childName && age && favouriteFood && favouriteSport && (
             <ResultScreen
               key="result"
               voiceId={voiceId}
               childName={childName}
               age={age}
+              favouriteFood={favouriteFood}
+              favouriteSport={favouriteSport}
               onReset={handleReset}
             />
           )}

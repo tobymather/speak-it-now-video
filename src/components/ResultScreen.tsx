@@ -10,6 +10,8 @@ interface ResultScreenProps {
   voiceId: string;
   childName: string;
   age: string;
+  favouriteFood: string;
+  favouriteSport: string;
   onReset: () => void;
 }
 
@@ -21,7 +23,7 @@ interface AudioResult {
   error?: string;
 }
 
-export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, age, onReset }) => {
+export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, age, favouriteFood, favouriteSport, onReset }) => {
   const [results, setResults] = useState<AudioResult[]>(
     VOICE_SCRIPTS.map(script => ({
       scriptId: script.id,
@@ -38,6 +40,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
           try {
             let scriptText = script.text.replace(/\{child_name\}/g, childName);
             scriptText = scriptText.replace(/\{age\}/g, age);
+            scriptText = scriptText.replace(/\{favourite_food\}/g, favouriteFood);
+            scriptText = scriptText.replace(/\{favourite_sport\}/g, favouriteSport);
             const result = await generateSpeech(voiceId, scriptText);
             return {
               scriptId: script.id,
@@ -60,7 +64,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
     };
 
     generateAllAudio();
-  }, [voiceId, childName, age]);
+  }, [voiceId, childName, age, favouriteFood, favouriteSport]);
 
   return (
     <motion.div
@@ -71,7 +75,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
     >
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Your child's future English level:</h1>
-        <p className="text-gray-600 mt-2">Here's the progress your child will make with Novakid</p>
+        <p className="text-gray-600 mt-2">Here's how your child will sound after 100 lessons with Novakid</p>
       </div>
 
       <div className="space-y-6">
@@ -98,14 +102,29 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
         ))}
       </div>
 
-      <div className="mt-8 text-center">
-        <Button
-          onClick={onReset}
-          variant="outline"
-          className="w-full sm:w-auto"
-        >
-          Create Another Voice
-        </Button>
+      <div className="mt-8 text-center space-y-4">
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Ready to start your child's English journey?
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Book a free trial lesson with Novakid and see your child's progress firsthand!
+          </p>
+          <Button
+            asChild
+            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg font-semibold"
+          >
+            <a
+              href="https://novakidschool.com?utm_source=ai_preview&utm_medium=web_app&utm_campaign=english_level_demo&utm_content=try_free_lesson"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Try a Free Trial Lesson
+            </a>
+          </Button>
+        </div>
+        
+
       </div>
     </motion.div>
   );

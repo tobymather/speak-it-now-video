@@ -12,6 +12,8 @@ interface UploadScreenProps {
     voiceId: string;
     childName: string;
     age: string;
+    favouriteFood: string;
+    favouriteSport: string;
   }) => void;
 }
 
@@ -24,6 +26,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
   const [audioMode, setAudioMode] = useState<'record' | 'upload'>('record');
   const [childName, setChildName] = useState('');
   const [age, setAge] = useState('');
+  const [favouriteFood, setFavouriteFood] = useState('');
+  const [favouriteSport, setFavouriteSport] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -89,6 +93,14 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
       setError('Please select the child\'s age.');
       return;
     }
+    if (!favouriteFood) {
+      setError('Please select the child\'s favourite food.');
+      return;
+    }
+    if (!favouriteSport) {
+      setError('Please select the child\'s favourite sport.');
+      return;
+    }
     setIsProcessing(true);
     setError(null);
     setStatus('Processing voice sample...');
@@ -101,6 +113,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
         voiceId: result.voice_id,
         childName: childName.trim(),
         age,
+        favouriteFood,
+        favouriteSport,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process voice');
@@ -201,6 +215,48 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
                 ))}
               </select>
             </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Favourite Food</label>
+              <select
+                value={favouriteFood}
+                onChange={e => setFavouriteFood(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isProcessing}
+                required
+              >
+                <option value="">Select favourite food</option>
+                <option value="pizza">Pizza</option>
+                <option value="ice cream">Ice Cream</option>
+                <option value="chocolate">Chocolate</option>
+                <option value="pasta">Pasta</option>
+                <option value="burgers">Burgers</option>
+                <option value="cookies">Cookies</option>
+                <option value="apples">Apples</option>
+                <option value="sandwiches">Sandwiches</option>
+                <option value="chicken">Chicken</option>
+              </select>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Favourite Sport</label>
+              <select
+                value={favouriteSport}
+                onChange={e => setFavouriteSport(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isProcessing}
+                required
+              >
+                <option value="">Select favourite sport</option>
+                <option value="football">Football</option>
+                <option value="basketball">Basketball</option>
+                <option value="tennis">Tennis</option>
+                <option value="swimming">Swimming</option>
+                <option value="soccer">Soccer</option>
+                <option value="baseball">Baseball</option>
+                <option value="volleyball">Volleyball</option>
+                <option value="gymnastics">Gymnastics</option>
+                <option value="running">Running</option>
+              </select>
+            </div>
           </div>
         </Card>
         
@@ -209,7 +265,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
         
         <Button
           type="submit"
-          disabled={isProcessing || !selectedAudio || !childName.trim() || !age}
+          disabled={isProcessing || !selectedAudio || !childName.trim() || !age || !favouriteFood || !favouriteSport}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-gray-300"
         >
           {isProcessing ? 'Processing...' : 'Create AI Voice'}
