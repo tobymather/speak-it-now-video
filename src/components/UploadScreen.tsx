@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { analytics } from "@/lib/analytics";
 import { uploadAsset } from '../lib/heygen';
 import type { UploadResult } from '../lib/heygen';
 
@@ -18,7 +19,7 @@ interface UploadScreenProps {
 }
 
 export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,6 +36,9 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
   // Handle recording start
   const startRecording = async () => {
     try {
+      // Track audio recording start
+      analytics.recordAudio(language);
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -58,7 +62,9 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
       setError(null);
       setStatus(t('upload.recording'));
     } catch (err) {
-      setError(t('upload.errors.microphoneAccess'));
+      const errorMessage = t('upload.errors.microphoneAccess');
+      setError(errorMessage);
+      analytics.error('microphone_access', errorMessage, { language });
       console.error('Recording error:', err);
     }
   };
@@ -92,10 +98,15 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
       setError(t('upload.errors.selectSport'));
       return;
     }
+    
     setIsProcessing(true);
     setError(null);
     setStatus(t('upload.processing'));
+    
     try {
+      // Track voice generation start
+      analytics.generateVoice(language, favouriteFood, favouriteSport);
+      
       const result = await uploadAsset(selectedAudio);
       if (!result.voice_id) {
         throw new Error('Failed to create voice');
@@ -108,7 +119,13 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onComplete }) => {
         favouriteSport,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('upload.errors.processingFailed'));
+      const errorMessage = err instanceof Error ? err.message : t('upload.errors.processingFailed');
+      setError(errorMessage);
+      analytics.error('voice_generation', errorMessage, { 
+        language, 
+        favouriteFood, 
+        favouriteSport 
+      });
       setStatus('');
     } finally {
       setIsProcessing(false);

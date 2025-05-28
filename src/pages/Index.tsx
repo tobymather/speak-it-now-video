@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UploadScreen } from "@/components/UploadScreen";
 import { ResultScreen } from "@/components/ResultScreen";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,16 +13,7 @@ import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence } from "framer-motion";
 import { useLocalization } from "@/contexts/LocalizationContext";
-import posthog from "posthog-js";
-
-// Initialize PostHog but only if key exists and is not the placeholder
-if (typeof window !== 'undefined' && 
-    import.meta.env.VITE_POSTHOG_KEY && 
-    import.meta.env.VITE_POSTHOG_KEY !== 'your_posthog_key_here') {
-  posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
-    api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
-  });
-}
+import { analytics } from "@/lib/analytics";
 
 const Index = () => {
   const { language, setLanguage, t } = useLocalization();
@@ -34,6 +25,16 @@ const Index = () => {
   const [favouriteSport, setFavouriteSport] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Track page view on component mount
+  useEffect(() => {
+    analytics.pageView('home', language);
+  }, [language]);
+
+  const handleLanguageChange = (newLanguage: 'en' | 'ro') => {
+    setLanguage(newLanguage);
+    analytics.pageView('home', newLanguage);
+  };
+
   const handleUploadComplete = async (data: { voiceId: string, childName: string, age: string, favouriteFood: string, favouriteSport: string }) => {
     setVoiceId(data.voiceId);
     setChildName(data.childName);
@@ -41,6 +42,9 @@ const Index = () => {
     setFavouriteFood(data.favouriteFood);
     setFavouriteSport(data.favouriteSport);
     setScreen('result');
+    
+    // Track navigation to result screen
+    analytics.pageView('result', language);
   };
 
   const handleReset = () => {
@@ -51,6 +55,9 @@ const Index = () => {
     setFavouriteFood(null);
     setFavouriteSport(null);
     setError(null);
+    
+    // Track navigation back to upload screen
+    analytics.pageView('upload', language);
   };
 
   return (
@@ -76,13 +83,13 @@ const Index = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem 
-                onClick={() => setLanguage('ro')}
+                onClick={() => handleLanguageChange('ro')}
                 className={language === 'ro' ? 'bg-gray-100' : ''}
               >
                 🇷🇴 Română
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => setLanguage('en')}
+                onClick={() => handleLanguageChange('en')}
                 className={language === 'en' ? 'bg-gray-100' : ''}
               >
                 🇺🇸 English

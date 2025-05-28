@@ -6,6 +6,9 @@ const HEYGEN_API_KEY = import.meta.env.VITE_HEYGEN_API_KEY;
 const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 
+// Import analytics for tracking
+import { analytics } from './analytics';
+
 // Types
 export interface UploadResult {
   voice_id?: string;
@@ -168,6 +171,9 @@ export async function cleanupOldVoices(): Promise<{ deleted: number; errors: str
       .map(result => (result as PromiseRejectedResult).reason.message);
 
     console.log(`Voice cleanup completed: ${deleted} deleted, ${errors.length} errors`);
+    
+    // Track cleanup analytics
+    analytics.voiceCleanup(deleted, errors.length);
     
     return { deleted, errors };
 

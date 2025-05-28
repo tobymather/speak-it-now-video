@@ -4,10 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LocalizationProvider } from "@/contexts/LocalizationContext";
+import { initAnalytics } from "@/lib/analytics";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Initialize PostHog analytics
+initAnalytics();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

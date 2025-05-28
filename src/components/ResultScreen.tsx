@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { useLocalization } from '@/contexts/LocalizationContext';
+import { analytics } from '@/lib/analytics';
 import { generateSpeech } from '../lib/heygen';
 import { VOICE_SCRIPTS } from '../lib/scripts';
 import strings from '../lib/strings.json';
@@ -26,7 +27,7 @@ interface AudioResult {
 }
 
 export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, age, favouriteFood, favouriteSport, onReset }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [results, setResults] = useState<AudioResult[]>(
     VOICE_SCRIPTS.map(script => ({
       scriptId: script.id,
@@ -35,6 +36,16 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
       isLoading: true,
     }))
   );
+
+  // Handle audio play events
+  const handleAudioPlay = (audioType: 'original' | 'generated') => {
+    analytics.listenRecording(audioType, language);
+  };
+
+  // Handle trial link click
+  const handleTrialLinkClick = () => {
+    analytics.clickTrialLink(language, 'cta_button');
+  };
 
   // Update titles when language changes
   useEffect(() => {
@@ -69,12 +80,19 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
               isLoading: false,
             };
           } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to generate audio';
+            analytics.error('audio_generation', errorMessage, { 
+              language, 
+              scriptId: script.id,
+              favouriteFood,
+              favouriteSport 
+            });
             return {
               scriptId: script.id,
               title: t('result.scriptTitle'),
               audioUrl: '',
               isLoading: false,
-              error: error instanceof Error ? error.message : 'Failed to generate audio',
+              error: errorMessage,
             };
           }
         })
@@ -115,6 +133,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
                 controls
                 className="w-full"
                 controlsList="nodownload"
+                onPlay={() => handleAudioPlay('generated')}
               />
             )}
           </Card>
@@ -137,6 +156,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
               href="https://novakidschool.com?utm_source=ai_preview&utm_medium=web_app&utm_campaign=english_level_demo&utm_content=try_free_lesson"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleTrialLinkClick}
             >
               {t('result.ctaButton')}
             </a>
