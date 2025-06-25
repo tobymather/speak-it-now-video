@@ -128,5 +128,330 @@
       "gymnastics": "Gimnastică",
       "running": "Alergare"
     }
+  },
+  "tr": {
+    "nav": {
+      "title": "İngilizce Seviye AI Önizleme"
+    },
+    "upload": {
+      "title": "İngilizce Seviye AI Önizleme",
+      "subtitle": "AI önizlemenizi oluşturmak için ses örneği kaydedin",
+      "recordButton": "Kayıt Başlat",
+      "stopButton": "Kayıt Durdur",
+      "recordTooltip": "Lütfen çocuğunuzun kendi dilinde konuşurken 10-20 saniye kayıt yapın",
+      "childNameLabel": "Çocuğun Adı (İngilizce harflerle)",
+      "childNamePlaceholder": "Çocuğun adını girin",
+      "ageLabel": "Yaş",
+      "ageSelect": "Yaş seçin",
+      "favouriteFoodLabel": "Favori Yemek",
+      "favouriteFoodSelect": "Favori yemeği seçin",
+      "favouriteSportLabel": "Favori Spor",
+      "favouriteSportSelect": "Favori sporu seçin",
+      "createButton": "AI Sesi Oluştur",
+      "processing": "İşleniyor...",
+      "recording": "Kayıt yapılıyor...",
+      "recordingSaved": "Kayıt kaydedildi",
+      "selectedAudio": "Seçilen ses:",
+      "errors": {
+        "enterName": "Lütfen çocuğun adını girin.",
+        "selectAge": "Lütfen çocuğun yaşını seçin.",
+        "selectFood": "Lütfen çocuğun favori yemeğini seçin.",
+        "selectSport": "Lütfen çocuğun favori sporunu seçin.",
+        "microphoneAccess": "Mikrofon erişimi başarısız",
+        "processingFailed": "Ses işlenemedi"
+      }
+    },
+    "result": {
+      "title": "Çocuğunuzun gelecekteki İngilizce seviyesi:",
+      "subtitle": "İşte çocuğunuz Novakid ile 100 ders sonrasında nasıl ses çıkaracak",
+      "scriptTitle": "100 ders sonrasında: CEFR A1",
+      "generating": "Ses oluşturuluyor...",
+      "ctaTitle": "Çocuğunuzun İngilizce yolculuğuna başlamaya hazır mısınız?",
+      "ctaSubtitle": "Novakid ile ücretsiz deneme dersi rezerve edin ve çocuğunuzun ilerlemesini bizzat görün!",
+      "ctaButton": "Deneme dersi hakkında bilgi alın",
+      "resetButton": "Başka Bir Ses Oluştur"
+    },
+    "foods": {
+      "pizza": "Pizza",
+      "ice cream": "Dondurma",
+      "chocolate": "Çikolata",
+      "pasta": "Makarna",
+      "burgers": "Burger",
+      "cookies": "Kurabiye",
+      "apples": "Elma",
+      "sandwiches": "Sandviç",
+      "chicken": "Tavuk"
+    },
+    "sports": {
+      "football": "Futbol",
+      "basketball": "Basketbol",
+      "tennis": "Tenis",
+      "swimming": "Yüzme",
+      "soccer": "Futbol",
+      "baseball": "Beyzbol",
+      "volleyball": "Voleybol",
+      "gymnastics": "Jimnastik",
+      "running": "Koşu"
+    }
+  },
+  "arab": {
+    "nav": {
+      "title": "معاينة الذكاء الاصطناعي لمستوى اللغة الإنجليزية"
+    },
+    "upload": {
+      "title": "معاينة الذكاء الاصطناعي لمستوى اللغة الإنجليزية",
+      "subtitle": "سجل عينة صوتية لإنشاء معاينة الذكاء الاصطناعي الخاصة بك",
+      "recordButton": "ابدأ التسجيل",
+      "stopButton": "إيقاف التسجيل",
+      "recordTooltip": "يرجى تسجيل 10-20 ثانية من حديث طفلك بلغته",
+      "childNameLabel": "اسم الطفل (بالحروف الإنجليزية)",
+      "childNamePlaceholder": "أدخل اسم الطفل",
+      "ageLabel": "العمر",
+      "ageSelect": "اختر العمر",
+      "favouriteFoodLabel": "الطعام المفضل",
+      "favouriteFoodSelect": "اختر الطعام المفضل",
+      "favouriteSportLabel": "الرياضة المفضلة",
+      "favouriteSportSelect": "اختر الرياضة المفضلة",
+      "createButton": "إنشاء صوت الذكاء الاصطناعي",
+      "processing": "جاري المعالجة...",
+      "recording": "جاري التسجيل...",
+      "recordingSaved": "تم حفظ التسجيل",
+      "selectedAudio": "الصوت المحدد:",
+      "errors": {
+        "enterName": "يرجى إدخال اسم الطفل.",
+        "selectAge": "يرجى اختيار عمر الطفل.",
+        "selectFood": "يرجى اختيار الطعام المفضل للطفل.",
+        "selectSport": "يرجى اختيار الرياضة المفضلة للطفل.",
+        "microphoneAccess": "فشل في الوصول إلى الميكروفون",
+        "processingFailed": "فشل في معالجة الصوت"
+      }
+    },
+    "result": {
+      "title": "مستوى طفلك المستقبلي في اللغة الإنجليزية:",
+      "subtitle": "هكذا سيبدو صوت طفلك بعد 100 درس مع نوفاكيد",
+      "scriptTitle": "بعد 100 درس: CEFR A1",
+      "generating": "جاري إنشاء الصوت...",
+      "ctaTitle": "مستعد لبدء رحلة طفلك في اللغة الإنجليزية؟",
+      "ctaSubtitle": "احجز درس تجريبي مجاني مع نوفاكيد وشاهد تقدم طفلك مباشرة!",
+      "ctaButton": "تعرف على الدرس التجريبي",
+      "resetButton": "إنشاء صوت آخر"
+    },
+    "foods": {
+      "pizza": "بيتزا",
+      "ice cream": "آيس كريم",
+      "chocolate": "شوكولاتة",
+      "pasta": "معكرونة",
+      "burgers": "برغر",
+      "cookies": "بسكويت",
+      "apples": "تفاح",
+      "sandwiches": "شطائر",
+      "chicken": "دجاج"
+    },
+    "sports": {
+      "football": "كرة القدم",
+      "basketball": "كرة السلة",
+      "tennis": "التنس",
+      "swimming": "السباحة",
+      "soccer": "كرة القدم",
+      "baseball": "البيسبول",
+      "volleyball": "الكرة الطائرة",
+      "gymnastics": "الجمباز",
+      "running": "الجري"
+    }
+  },
+  "fr": {
+    "nav": {
+      "title": "Aperçu IA Niveau Anglais"
+    },
+    "upload": {
+      "title": "Aperçu IA Niveau Anglais",
+      "subtitle": "Enregistrez un échantillon vocal pour créer votre aperçu IA",
+      "recordButton": "Commencer l'enregistrement",
+      "stopButton": "Arrêter l'enregistrement",
+      "recordTooltip": "Veuillez enregistrer 10-20 secondes de votre enfant parlant dans sa langue",
+      "childNameLabel": "Nom de l'enfant (en lettres anglaises)",
+      "childNamePlaceholder": "Entrez le nom de l'enfant",
+      "ageLabel": "Âge",
+      "ageSelect": "Sélectionnez l'âge",
+      "favouriteFoodLabel": "Nourriture préférée",
+      "favouriteFoodSelect": "Sélectionnez la nourriture préférée",
+      "favouriteSportLabel": "Sport préféré",
+      "favouriteSportSelect": "Sélectionnez le sport préféré",
+      "createButton": "Créer la voix IA",
+      "processing": "Traitement en cours...",
+      "recording": "Enregistrement en cours...",
+      "recordingSaved": "Enregistrement sauvegardé",
+      "selectedAudio": "Audio sélectionné :",
+      "errors": {
+        "enterName": "Veuillez entrer le nom de l'enfant.",
+        "selectAge": "Veuillez sélectionner l'âge de l'enfant.",
+        "selectFood": "Veuillez sélectionner la nourriture préférée de l'enfant.",
+        "selectSport": "Veuillez sélectionner le sport préféré de l'enfant.",
+        "microphoneAccess": "Échec de l'accès au microphone",
+        "processingFailed": "Échec du traitement vocal"
+      }
+    },
+    "result": {
+      "title": "Le niveau d'anglais futur de votre enfant :",
+      "subtitle": "Voici comment votre enfant sonnera après 100 leçons avec Novakid",
+      "scriptTitle": "Après 100 leçons : CEFR A1",
+      "generating": "Génération audio en cours...",
+      "ctaTitle": "Prêt à commencer le voyage en anglais de votre enfant ?",
+      "ctaSubtitle": "Réservez un cours d'essai gratuit avec Novakid et voyez les progrès de votre enfant en direct !",
+      "ctaButton": "Découvrir le cours d'essai",
+      "resetButton": "Créer une autre voix"
+    },
+    "foods": {
+      "pizza": "Pizza",
+      "ice cream": "Crème glacée",
+      "chocolate": "Chocolat",
+      "pasta": "Pâtes",
+      "burgers": "Burgers",
+      "cookies": "Biscuits",
+      "apples": "Pommes",
+      "sandwiches": "Sandwiches",
+      "chicken": "Poulet"
+    },
+    "sports": {
+      "football": "Football",
+      "basketball": "Basketball",
+      "tennis": "Tennis",
+      "swimming": "Natation",
+      "soccer": "Football",
+      "baseball": "Baseball",
+      "volleyball": "Volleyball",
+      "gymnastics": "Gymnastique",
+      "running": "Course"
+    }
+  },
+  "es": {
+    "nav": {
+      "title": "Vista Previa IA Nivel de Inglés"
+    },
+    "upload": {
+      "title": "Vista Previa IA Nivel de Inglés",
+      "subtitle": "Graba una muestra de voz para crear tu vista previa IA",
+      "recordButton": "Comenzar Grabación",
+      "stopButton": "Detener Grabación",
+      "recordTooltip": "Por favor graba 10-20 segundos de tu hijo hablando en su idioma",
+      "childNameLabel": "Nombre del Niño (en letras inglesas)",
+      "childNamePlaceholder": "Ingresa el nombre del niño",
+      "ageLabel": "Edad",
+      "ageSelect": "Selecciona la edad",
+      "favouriteFoodLabel": "Comida Favorita",
+      "favouriteFoodSelect": "Selecciona la comida favorita",
+      "favouriteSportLabel": "Deporte Favorito",
+      "favouriteSportSelect": "Selecciona el deporte favorito",
+      "createButton": "Crear Voz IA",
+      "processing": "Procesando...",
+      "recording": "Grabando...",
+      "recordingSaved": "Grabación guardada",
+      "selectedAudio": "Audio seleccionado:",
+      "errors": {
+        "enterName": "Por favor ingresa el nombre del niño.",
+        "selectAge": "Por favor selecciona la edad del niño.",
+        "selectFood": "Por favor selecciona la comida favorita del niño.",
+        "selectSport": "Por favor selecciona el deporte favorito del niño.",
+        "microphoneAccess": "Error al acceder al micrófono",
+        "processingFailed": "Error al procesar la voz"
+      }
+    },
+    "result": {
+      "title": "El nivel futuro de inglés de tu hijo:",
+      "subtitle": "Así es como sonará tu hijo después de 100 lecciones con Novakid",
+      "scriptTitle": "Después de 100 lecciones: CEFR A1",
+      "generating": "Generando audio...",
+      "ctaTitle": "¿Listo para comenzar el viaje de inglés de tu hijo?",
+      "ctaSubtitle": "¡Reserva una lección de prueba gratuita con Novakid y ve el progreso de tu hijo en persona!",
+      "ctaButton": "Conoce la lección de prueba",
+      "resetButton": "Crear Otra Voz"
+    },
+    "foods": {
+      "pizza": "Pizza",
+      "ice cream": "Helado",
+      "chocolate": "Chocolate",
+      "pasta": "Pasta",
+      "burgers": "Hamburguesas",
+      "cookies": "Galletas",
+      "apples": "Manzanas",
+      "sandwiches": "Sándwiches",
+      "chicken": "Pollo"
+    },
+    "sports": {
+      "football": "Fútbol",
+      "basketball": "Baloncesto",
+      "tennis": "Tenis",
+      "swimming": "Natación",
+      "soccer": "Fútbol",
+      "baseball": "Béisbol",
+      "volleyball": "Voleibol",
+      "gymnastics": "Gimnasia",
+      "running": "Correr"
+    }
+  },
+  "il": {
+    "nav": {
+      "title": "תצוגה מקדימה של בינה מלאכותית לרמת אנגלית"
+    },
+    "upload": {
+      "title": "תצוגה מקדימה של בינה מלאכותית לרמת אנגלית",
+      "subtitle": "הקלט דגימת קול כדי ליצור את התצוגה המקדימה של הבינה המלאכותית שלך",
+      "recordButton": "התחל הקלטה",
+      "stopButton": "עצור הקלטה",
+      "recordTooltip": "אנא הקלט 10-20 שניות של ילדך מדבר בשפתו",
+      "childNameLabel": "שם הילד (באותיות אנגליות)",
+      "childNamePlaceholder": "הכנס את שם הילד",
+      "ageLabel": "גיל",
+      "ageSelect": "בחר גיל",
+      "favouriteFoodLabel": "אוכל מועדף",
+      "favouriteFoodSelect": "בחר אוכל מועדף",
+      "favouriteSportLabel": "ספורט מועדף",
+      "favouriteSportSelect": "בחר ספורט מועדף",
+      "createButton": "צור קול בינה מלאכותית",
+      "processing": "מעבד...",
+      "recording": "מקליט...",
+      "recordingSaved": "הקלטה נשמרה",
+      "selectedAudio": "אודיו נבחר:",
+      "errors": {
+        "enterName": "אנא הכנס את שם הילד.",
+        "selectAge": "אנא בחר את גיל הילד.",
+        "selectFood": "אנא בחר את האוכל המועדף של הילד.",
+        "selectSport": "אנא בחר את הספורט המועדף של הילד.",
+        "microphoneAccess": "נכשל בגישה למיקרופון",
+        "processingFailed": "נכשל בעיבוד הקול"
+      }
+    },
+    "result": {
+      "title": "רמת האנגלית העתידית של ילדך:",
+      "subtitle": "כך יישמע ילדך לאחר 100 שיעורים עם נובאקיד",
+      "scriptTitle": "לאחר 100 שיעורים: CEFR A1",
+      "generating": "מייצר אודיו...",
+      "ctaTitle": "מוכן להתחיל את מסע האנגלית של ילדך?",
+      "ctaSubtitle": "הזמן שיעור ניסיון חינם עם נובאקיד וצפה בהתקדמות ילדך באופן אישי!",
+      "ctaButton": "למד על שיעור הניסיון",
+      "resetButton": "צור קול נוסף"
+    },
+    "foods": {
+      "pizza": "פיצה",
+      "ice cream": "גלידה",
+      "chocolate": "שוקולד",
+      "pasta": "פסטה",
+      "burgers": "המבורגרים",
+      "cookies": "עוגיות",
+      "apples": "תפוחים",
+      "sandwiches": "כריכים",
+      "chicken": "עוף"
+    },
+    "sports": {
+      "football": "כדורגל",
+      "basketball": "כדורסל",
+      "tennis": "טניס",
+      "swimming": "שחייה",
+      "soccer": "כדורגל",
+      "baseball": "בייסבול",
+      "volleyball": "כדורעף",
+      "gymnastics": "התעמלות",
+      "running": "ריצה"
+    }
   }
 } 

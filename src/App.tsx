@@ -3,8 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LocalizationProvider } from "@/contexts/LocalizationContext";
+import { LocalizationProvider, useLocalization } from "@/contexts/LocalizationContext";
 import { initAnalytics } from "@/lib/analytics";
+import { isRTL } from "@/lib/utils";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -13,9 +14,13 @@ const queryClient = new QueryClient();
 // Initialize PostHog analytics
 initAnalytics();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LocalizationProvider>
+// Component to handle RTL direction
+const AppContent = () => {
+  const { language } = useLocalization();
+  const isRTLLanguage = isRTL(language);
+
+  return (
+    <div dir={isRTLLanguage ? 'rtl' : 'ltr'} className={isRTLLanguage ? 'rtl' : 'ltr'}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -27,6 +32,14 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+    </div>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <LocalizationProvider>
+      <AppContent />
     </LocalizationProvider>
   </QueryClientProvider>
 );

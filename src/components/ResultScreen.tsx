@@ -145,9 +145,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {t('result.ctaTitle')}
           </h3>
-          <p className="text-gray-600 mb-4">
-            {t('result.ctaSubtitle')}
-          </p>
+
           <Button
             asChild
             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg font-semibold"

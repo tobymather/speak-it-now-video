@@ -12,7 +12,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence } from "framer-motion";
-import { useLocalization } from "@/contexts/LocalizationContext";
+import { useLocalization, type Language } from "@/contexts/LocalizationContext";
 import { analytics } from "@/lib/analytics";
 
 const Index = () => {
@@ -30,10 +30,23 @@ const Index = () => {
     analytics.pageView('home', language);
   }, [language]);
 
-  const handleLanguageChange = (newLanguage: 'en' | 'ro') => {
+  const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
     analytics.pageView('home', newLanguage);
   };
+
+  // Language options with flags and names
+  const languageOptions = [
+    { code: 'en' as Language, flag: '🇺🇸', name: 'English' },
+    { code: 'ro' as Language, flag: '🇷🇴', name: 'Română' },
+    { code: 'tr' as Language, flag: '🇹🇷', name: 'Türkçe' },
+    { code: 'arab' as Language, flag: '🇸🇦', name: 'العربية' },
+    { code: 'fr' as Language, flag: '🇫🇷', name: 'Français' },
+    { code: 'es' as Language, flag: '🇪🇸', name: 'Español' },
+    { code: 'il' as Language, flag: '🇮🇱', name: 'עברית' },
+  ];
+
+  const currentLanguage = languageOptions.find(lang => lang.code === language);
 
   const handleUploadComplete = async (data: { voiceId: string, childName: string, age: string, favouriteFood: string, favouriteSport: string }) => {
     setVoiceId(data.voiceId);
@@ -76,24 +89,21 @@ const Index = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="flex items-center space-x-2">
                 <span className="text-sm font-medium">
-                  {language === 'en' ? '🇺🇸 EN' : '🇷🇴 RO'}
+                  {currentLanguage ? `${currentLanguage.flag} ${currentLanguage.code.toUpperCase()}` : '🌐'}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem 
-                onClick={() => handleLanguageChange('ro')}
-                className={language === 'ro' ? 'bg-gray-100' : ''}
-              >
-                🇷🇴 Română
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleLanguageChange('en')}
-                className={language === 'en' ? 'bg-gray-100' : ''}
-              >
-                🇺🇸 English
-              </DropdownMenuItem>
+              {languageOptions.map((lang) => (
+                <DropdownMenuItem 
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  className={language === lang.code ? 'bg-gray-100' : ''}
+                >
+                  {lang.flag} {lang.name}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
