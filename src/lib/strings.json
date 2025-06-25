@@ -38,7 +38,7 @@
       "generating": "Generating audio...",
       "ctaTitle": "Ready to start your child's English journey?",
       "ctaSubtitle": "Book a free trial lesson with Novakid and see your child's progress firsthand!",
-      "ctaButton": "Learn about the trial class",
+      "ctaButton": "Choose a subscription",
       "resetButton": "Create Another Voice"
     },
     "foods": {
@@ -103,7 +103,7 @@
       "generating": "Se generează audio...",
       "ctaTitle": "Gata să începi călătoria în engleză a copilului tău?",
       "ctaSubtitle": "Rezervă o lecție de probă gratuită cu Novakid și vezi progresul copilului tău în direct!",
-      "ctaButton": "Descoperă lecția de probă",
+      "ctaButton": "Alegeți un abonament",
       "resetButton": "Creează o Altă Voce"
     },
     "foods": {
@@ -168,7 +168,7 @@
       "generating": "Ses oluşturuluyor...",
       "ctaTitle": "Çocuğunuzun İngilizce yolculuğuna başlamaya hazır mısınız?",
       "ctaSubtitle": "Novakid ile ücretsiz deneme dersi rezerve edin ve çocuğunuzun ilerlemesini bizzat görün!",
-      "ctaButton": "Deneme dersi hakkında bilgi alın",
+      "ctaButton": "Abonelik seçin",
       "resetButton": "Başka Bir Ses Oluştur"
     },
     "foods": {
@@ -233,7 +233,7 @@
       "generating": "جاري إنشاء الصوت...",
       "ctaTitle": "مستعد لبدء رحلة طفلك في اللغة الإنجليزية؟",
       "ctaSubtitle": "احجز درس تجريبي مجاني مع نوفاكيد وشاهد تقدم طفلك مباشرة!",
-      "ctaButton": "تعرف على الدرس التجريبي",
+      "ctaButton": "اشترك بكود الخصم",
       "resetButton": "إنشاء صوت آخر"
     },
     "foods": {
@@ -298,7 +298,7 @@
       "generating": "Génération audio en cours...",
       "ctaTitle": "Prêt à commencer le voyage en anglais de votre enfant ?",
       "ctaSubtitle": "Réservez un cours d'essai gratuit avec Novakid et voyez les progrès de votre enfant en direct !",
-      "ctaButton": "Découvrir le cours d'essai",
+      "ctaButton": "Choisir un abonnement",
       "resetButton": "Créer une autre voix"
     },
     "foods": {
@@ -363,7 +363,7 @@
       "generating": "Generando audio...",
       "ctaTitle": "¿Listo para comenzar el viaje de inglés de tu hijo?",
       "ctaSubtitle": "¡Reserva una lección de prueba gratuita con Novakid y ve el progreso de tu hijo en persona!",
-      "ctaButton": "Conoce la lección de prueba",
+      "ctaButton": "Elige una suscripción",
       "resetButton": "Crear Otra Voz"
     },
     "foods": {
@@ -428,7 +428,7 @@
       "generating": "מייצר אודיו...",
       "ctaTitle": "מוכן להתחיל את מסע האנגלית של ילדך?",
       "ctaSubtitle": "הזמן שיעור ניסיון חינם עם נובאקיד וצפה בהתקדמות ילדך באופן אישי!",
-      "ctaButton": "למד על שיעור הניסיון",
+      "ctaButton": "בחר מנוי",
       "resetButton": "צור קול נוסף"
     },
     "foods": {

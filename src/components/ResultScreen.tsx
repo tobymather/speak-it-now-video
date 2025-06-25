@@ -151,7 +151,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ voiceId, childName, 
             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg font-semibold"
           >
             <a
-              href="https://school.novakidschool.com/parent/dashboard?utm_source=ai_preview&utm_medium=web_app&utm_campaign=english_level_demo&utm_content=try_free_lesson"
+              href="https://school.novakidschool.com/parent/billing/buy-subscription?utm_source=ai_preview&utm_medium=web_app&utm_campaign=english_level_demo&utm_content=buy_subscription"
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleTrialLinkClick}
