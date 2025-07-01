@@ -4,10 +4,10 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { useLocalization } from '@/contexts/LocalizationContext';
 import { analytics } from '@/lib/analytics';
-import { generateSpeech } from '../lib/heygen';
+import { generateSpeech } from '../lib/elevenlabs';
 import { VOICE_SCRIPTS } from '../lib/scripts';
 import strings from '../lib/strings.json';
-import type { UploadResult } from '../lib/heygen';
+import type { UploadResult } from '../lib/elevenlabs';
 
 interface ResultScreenProps {
   voiceId: string;

@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { analytics } from "@/lib/analytics";
-import { uploadAsset } from '../lib/heygen';
-import type { UploadResult } from '../lib/heygen';
+import { uploadAsset } from '../lib/elevenlabs';
+import type { UploadResult } from '../lib/elevenlabs';
 
 interface UploadScreenProps {
   onComplete: (data: {
