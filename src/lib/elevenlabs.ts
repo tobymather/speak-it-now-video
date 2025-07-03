@@ -56,12 +56,12 @@ async function makeWorkerRequest<T>(endpoint: string, options: RequestInit = {})
   return response.json();
 }
 
-// Clean up old ElevenLabs voices (older than 1 hour)
+// Clean up old ElevenLabs voices (older than 5 minutes)
 export async function cleanupOldVoices(): Promise<{ deleted: number; errors: string[] }> {
   console.log('Starting voice cleanup...');
   try {
-    // Calculate cutoff time (1 hour ago)
-    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
+    // Calculate cutoff time (5 minutes ago)
+    const fiveMinutesAgo = Math.floor(Date.now() / 1000) - 300;
     // Get all personal voices via Worker
     const response = await fetch(`${WORKER_URL}/elevenlabs/voices?voice_type=personal&sort=created_at_unix&sort_direction=asc&page_size=100`, {
       method: 'GET',
@@ -74,11 +74,11 @@ export async function cleanupOldVoices(): Promise<{ deleted: number; errors: str
     }
     const voicesData: ElevenLabsVoicesResponse = await response.json();
     console.log(`Found ${voicesData.total_count} personal voices`);
-    // Filter voices older than 1 hour
+    // Filter voices older than 5 minutes
     const voicesToDelete = voicesData.voices.filter(voice => 
-      voice.created_at_unix < oneHourAgo && voice.is_owner
+      voice.created_at_unix < fiveMinutesAgo && voice.is_owner
     );
-    console.log(`Found ${voicesToDelete.length} voices older than 1 hour to delete`);
+    console.log(`Found ${voicesToDelete.length} voices older than 5 minutes to delete`);
     if (voicesToDelete.length === 0) {
       return { deleted: 0, errors: [] };
     }
